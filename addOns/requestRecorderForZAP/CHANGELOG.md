@@ -3,6 +3,11 @@ All notable changes to this add-on will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [v1.2.1] - 2024-12-03
+### Changed
+- maintenance: Renamed repository name from automacrobuilder to requestRecorder
+- bugfix: Apply Spotless for build tasks.
+
 ## [v1.2.0] - 2024-07-27
 ### Added
 - new feature:  Added [DecodeVectorInjector](https://github.com/gdgd009xcd/AutoMacroBuilderForZAP/wiki/1.8.-encoded-parameter-injector) which enabled to decode URLencoded/base64ed parameter value for scanning or pentesting.
