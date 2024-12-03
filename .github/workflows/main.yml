@@ -7,8 +7,8 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 env:
-  ZAP_ADDON_BUILD_DIR: 'addOns/automacrobuilder/build/zapAddOn'
-  ZAP_ADDON_BUILD_TASK: 'addOns:automacrobuilder:jarZapAddOn'
+  ZAP_ADDON_BUILD_DIR: 'addOns/requestRecorderForZAP/build/zapAddOn'
+  ZAP_ADDON_BUILD_TASK: 'addOns:requestRecorderForZAP:jarZapAddOn'
 
 jobs:
   build:
