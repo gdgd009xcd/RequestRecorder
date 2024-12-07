@@ -59,6 +59,16 @@ The add-on will be placed in the directory `RequestRecorder/addOns/requestRecord
 
 * Gradle builds may fail due to network connection timeouts for downloading dependencies. If you have such problems, please retry the gradlew command each time. or you can download addon file from [release page](https://github.com/gdgd009xcd/RequestRecorder/releases)
 
+## install
+
+This addon is 3rd party addon, so you must add this addon file to ZAPROXY manually. this addon does not have any telemetry feature.
+
+1. get addon file requestRecorderForZAP-xxx-n.n.n.zap on [this release page](https://github.com/gdgd009xcd/RequestRecorder/releases)
+1. Start ZAPROXY in your PC's Desktop.  
+1. Install add-on requestRecorderForZAP-xxx-n.n.n.zap file according to the ZAP add-on installation method (example: File menu "Load add-on file").<BR>
+![AddonInstall](https://raw.githubusercontent.com/gdgd009xcd/RELEASES/master/IMG/ZAP/addoninst.png)<BR>    
+1. restart zap(sorry, currently this addon does not work unless restart zap after install it.)
+
 ## FAQ
 ### FAQ is [here](https://github.com/gdgd009xcd/RequestRecorder/wiki/9.1.-FAQ)
 
