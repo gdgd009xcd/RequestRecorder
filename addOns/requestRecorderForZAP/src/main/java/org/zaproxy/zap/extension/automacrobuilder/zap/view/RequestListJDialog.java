@@ -1,6 +1,7 @@
 package org.zaproxy.zap.extension.automacrobuilder.zap.view;
 
 import java.awt.*;
+import java.util.ResourceBundle;
 import javax.swing.*;
 import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTrace;
@@ -13,6 +14,8 @@ import org.zaproxy.zap.extension.automacrobuilder.zap.AutoMacroBuilderAuthentica
 public class RequestListJDialog extends GridBagJDialog<Object> {
     AutoMacroBuilderAuthenticationMethodType.AutoMacroBuilderAuthenticationMethodOptionsPanel
             optionPanel;
+
+    private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
     JTabbedPane tabbedPane;
     int selectedTabIndex = -1;
@@ -27,7 +30,7 @@ public class RequestListJDialog extends GridBagJDialog<Object> {
                     optionPanel) {
         super(
                 View.getSingleton().getSessionDialog(),
-                "Macro Request List",
+                bundle.getString("MacroBuilderUI.MacroRequestListLabelTitle.text"),
                 ModalityType.DOCUMENT_MODAL);
         this.optionPanel = optionPanel;
         setUpRequestList();

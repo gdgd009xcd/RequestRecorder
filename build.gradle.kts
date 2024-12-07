@@ -16,6 +16,9 @@ allprojects {
     spotless {
         kotlinGradle {
             ktlint()
+
+            // this code enables spotless:on,off tag for excluding to apply spotless on sources.
+            toggleOffOn()
         }
 
         project.plugins.withType(JavaPlugin::class) {
