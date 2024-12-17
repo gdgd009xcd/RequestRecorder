@@ -53,7 +53,7 @@ import static org.zaproxy.zap.extension.automacrobuilder.ListDeepCopy.listDeepCo
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class MacroBuilderUI  extends javax.swing.JPanel implements  InterfaceParmGenRegexSaveCancelAction {
+public final class MacroBuilderUI  extends javax.swing.JPanel implements  InterfaceParmGenRegexSaveCancelAction {
 
     
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();

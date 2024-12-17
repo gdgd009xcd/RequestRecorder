@@ -17,7 +17,7 @@ import org.zaproxy.zap.extension.automacrobuilder.InterfaceLangOKNG;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class LangSelectDialog extends javax.swing.JDialog {
+public final class LangSelectDialog extends javax.swing.JDialog {
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
     MacroBuilderUI mbui = null;

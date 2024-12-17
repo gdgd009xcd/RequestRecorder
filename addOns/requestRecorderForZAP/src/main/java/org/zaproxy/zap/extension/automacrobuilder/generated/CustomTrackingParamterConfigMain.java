@@ -23,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.mdepend.ClientDependent;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class CustomTrackingParamterConfigMain extends javax.swing.JDialog {
+public final class CustomTrackingParamterConfigMain extends javax.swing.JDialog {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 

@@ -20,11 +20,12 @@ import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpRequestHeader;
 import org.parosproxy.paros.network.HttpSender;
 import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTraceProvider;
+import org.zaproxy.zap.extension.automacrobuilder.ParmGenUtil;
 import org.zaproxy.zap.extension.automacrobuilder.ThreadManagerProvider;
 import org.zaproxy.zap.extension.forceduser.ExtensionForcedUser;
 import org.zaproxy.zap.network.HttpSenderListener;
 
-public class MyFirstSenderListener implements HttpSenderListener {
+public final class MyFirstSenderListener implements HttpSenderListener {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -73,7 +74,8 @@ public class MyFirstSenderListener implements HttpSenderListener {
                             + "]");
 
             // if (this.startedcon.isSenderFromStartedActiveScanners(arg2) ) {
-            if (this.startedcon.isThreadFromStartedActiveScanners(Thread.currentThread().getId())) {
+            if (this.startedcon.isThreadFromStartedActiveScanners(
+                    ParmGenUtil.getThreadId(Thread.currentThread()))) {
                 // only call following methods when Scanner.start(Target) is called by
                 // ExtensionActiveScanWrapper
                 // forceUser set to null for disabling authentication.
@@ -82,10 +84,14 @@ public class MyFirstSenderListener implements HttpSenderListener {
                 // disable redirect
                 // arg2.setFollowRedirect(false);
                 // run preMacro
-                LOGGER4J.debug("beforemacro started threadid:" + Thread.currentThread().getId());
+                LOGGER4J.debug(
+                        "beforemacro started threadid:"
+                                + ParmGenUtil.getThreadId(Thread.currentThread()));
                 beforemacroprovider.setParameters(this.startedcon, arg0, arg1, arg2);
                 ThreadManagerProvider.getThreadManager().beginProcess(beforemacroprovider);
-                LOGGER4J.debug("beforemacro end threadid:" + Thread.currentThread().getId());
+                LOGGER4J.debug(
+                        "beforemacro end threadid:"
+                                + ParmGenUtil.getThreadId(Thread.currentThread()));
                 LOGGER4J.debug("Sender is originated from StartedActiveScan. senderid:" + arg2);
                 ZapUtil.updateOriginalEncodedHttpMessage(arg0);
             } else {
@@ -107,15 +113,20 @@ public class MyFirstSenderListener implements HttpSenderListener {
                             + " URL["
                             + getURL(arg0)
                             + "]");
-            if (this.startedcon.isThreadFromStartedActiveScanners(Thread.currentThread().getId())) {
+            if (this.startedcon.isThreadFromStartedActiveScanners(
+                    ParmGenUtil.getThreadId(Thread.currentThread()))) {
                 // only call following methods when Scanner.start(Target) is called by
                 // ExtensionActiveScanWrapper
                 // run postMacro
                 mustCleanUp = true;
-                LOGGER4J.debug("postmacro started threadid:" + Thread.currentThread().getId());
+                LOGGER4J.debug(
+                        "postmacro started threadid:"
+                                + ParmGenUtil.getThreadId(Thread.currentThread()));
                 postmacroprovider.setParameters(this.startedcon, arg0, arg1, arg2);
                 ThreadManagerProvider.getThreadManager().beginProcess(postmacroprovider);
-                LOGGER4J.debug("postmacro end threadid:" + Thread.currentThread().getId());
+                LOGGER4J.debug(
+                        "postmacro end threadid:"
+                                + ParmGenUtil.getThreadId(Thread.currentThread()));
                 LOGGER4J.debug(
                         "onHttpRequestReceive Sender is originated from StartedActiveScan. HttpSender:"
                                 + arg2);

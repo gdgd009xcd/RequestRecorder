@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 @SuppressWarnings("serial")
-public class BoxAndScrollerPanel extends JPanel {
+public final class BoxAndScrollerPanel extends JPanel {
     // create borderlayout for adding option input components in the future
     //  |-------------border layout PAGE_START--------------------|
     //  | |---------Box layout BoxLayout.Y_AXIS-----------------| |

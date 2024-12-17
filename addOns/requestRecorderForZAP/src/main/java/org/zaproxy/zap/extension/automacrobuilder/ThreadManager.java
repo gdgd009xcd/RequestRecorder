@@ -62,25 +62,25 @@ public class ThreadManager {
     private Long debug_maxpmapsize; // peek pmap size
 
     private void d_totalCountUp() {
-        synchronized (debug_totalcount) {
+        synchronized (this) {
             debug_totalcount++;
         }
     }
 
     private void d_endedCountUp() {
-        synchronized (debug_endedcount) {
+        synchronized (this) {
             debug_endedcount++;
         }
     }
 
     private void d_intrCountUp() {
-        synchronized (debug_intrcount) {
+        synchronized (this) {
             debug_intrcount++;
         }
     }
 
     private void d_setMaxPmap(int siz) {
-        synchronized (debug_maxpmapsize) {
+        synchronized (this) {
             if (this.debug_maxpmapsize < siz) {
                 this.debug_maxpmapsize = Integer.toUnsignedLong(siz);
             }
@@ -136,7 +136,7 @@ public class ThreadManager {
 
         OneThreadProcessor p = null;
         Thread th = Thread.currentThread();
-        long id = th.getId();
+        long id = ParmGenUtil.getThreadId(th);
         long siz =
                 pmap.entrySet().stream()
                         .filter(ent -> ent.getValue().getSequenceNo() == provider.getSequnceNo())
@@ -279,7 +279,10 @@ public class ThreadManager {
                 }
                 return true;
             } else {
-                LOGGER4J.error("id:" + Thread.currentThread().getId() + " BEGIN FAILED p is null");
+                LOGGER4J.error(
+                        "id:"
+                                + ParmGenUtil.getThreadId(Thread.currentThread())
+                                + " BEGIN FAILED p is null");
             }
         } catch (Exception ex) {
             LOGGER4J.error("Exception", ex);
@@ -388,11 +391,15 @@ public class ThreadManager {
 
     private synchronized void dummyinternalwaiter() {
         try {
-            LOGGER4J.info("enter dummyinternalwaiter wait id:" + Thread.currentThread().getId());
+            LOGGER4J.info(
+                    "enter dummyinternalwaiter wait id:"
+                            + ParmGenUtil.getThreadId(Thread.currentThread()));
             wait(1000);
-            LOGGER4J.info("leave dummyinternalwaiter wait id:" + Thread.currentThread().getId());
+            LOGGER4J.info(
+                    "leave dummyinternalwaiter wait id:"
+                            + ParmGenUtil.getThreadId(Thread.currentThread()));
         } catch (InterruptedException ex) {
-            LOGGER4J.error("id:" + Thread.currentThread().getId(), ex);
+            LOGGER4J.error("id:" + ParmGenUtil.getThreadId(Thread.currentThread()), ex);
         }
     }
 }

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 //
 // class AppValue
 //
-public class AppValue {
+public final class AppValue {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 

@@ -9,7 +9,7 @@ import java.io.IOException;
 //
 // ByteArray
 //
-public class ParmGenBinUtil {
+public final class ParmGenBinUtil {
 
     private ByteArrayOutputStream bstream = null;
 

@@ -40,9 +40,11 @@ ZAPROXY Mode: Standard mode
 
 
 
-## Download & Building
+## Download & Building in Ubuntu
 
 The add-on is built with [Gradle]: https://gradle.org/  
+
+### build with command line tools(Ubuntu)
 
 To download & build this addon, simply run:  
 
@@ -58,6 +60,15 @@ The add-on will be placed in the directory `RequestRecorder/addOns/requestRecord
     $   
 
 * Gradle builds may fail due to network connection timeouts for downloading dependencies. If you have such problems, please retry the gradlew command each time. or you can download addon file from [release page](https://github.com/gdgd009xcd/RequestRecorder/releases)
+
+### build with IntelliJ IDEA(Hereafter referred to as IJ)
+
+1. Start IJ, click [Clone Repository]
+1. Specify URL of repository. for example: https://github.com/gdgd009xcd/RequestRecorder.git
+1. Click [Clone]. IJ's IDE is opened.
+1. In the IJ's IDE, To display the Gradle tool window,<br> select menu:[View->Tool Windows->Gradle] or click [gradle] icon.<br> It shows a tree of Gradle tasks.
+1. Double click gradle task named:<br>[zap-extensions->Tasks->build->jarZapAddon]
+1. The addon zap file will be placed in the directory:<br>`RequestRecorder/addOns/requestRecorderForZAP/build/zapAddOn/bin`
 
 ## install
 

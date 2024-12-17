@@ -3,7 +3,7 @@ package org.zaproxy.zap.extension.automacrobuilder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ParseHttpContentType {
+public final class ParseHttpContentType {
     private Pattern regexPattern =
             Pattern.compile(
                     "^[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Tt][Yy][Pp][Ee]:[ \\t]*([^/\\r\\n \\t]+\\/[^/\\r\\n \\t;]+)[; \\t]+?.*?(?:[Cc][Hh][Aa][Rr][Ss][Ee][Tt])+[ \\t]*=[ \\t]*?(([^ \\t\\n\\x0B\\f\\r;]*))[; \\t]*.*$",

@@ -19,7 +19,7 @@ import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenCSVLoader extends javax.swing.JFrame {
+public final class ParmGenCSVLoader extends javax.swing.JFrame {
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
     String csvfile;
     FileReadLine frn;

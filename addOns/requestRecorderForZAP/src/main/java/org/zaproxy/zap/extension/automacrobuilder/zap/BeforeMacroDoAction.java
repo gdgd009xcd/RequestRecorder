@@ -5,12 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpSender;
-import org.zaproxy.zap.extension.automacrobuilder.InterfaceAction;
-import org.zaproxy.zap.extension.automacrobuilder.InterfaceDoAction;
-import org.zaproxy.zap.extension.automacrobuilder.InterfaceEndAction;
-import org.zaproxy.zap.extension.automacrobuilder.OneThreadProcessor;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTrace;
-import org.zaproxy.zap.extension.automacrobuilder.ThreadManager;
+import org.zaproxy.zap.extension.automacrobuilder.*;
 
 public class BeforeMacroDoAction implements InterfaceDoAction {
 
@@ -37,7 +32,10 @@ public class BeforeMacroDoAction implements InterfaceDoAction {
         // Add uuid to StartedActiveScanContainer to get ParmGenMacroTrace later
         acon.addUUID(uuid);
         LOGGER4J.debug(
-                "addUUID:" + uuid.toString() + " currentThread:" + Thread.currentThread().getId());
+                "addUUID:"
+                        + uuid.toString()
+                        + " currentThread:"
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
 
         List<InterfaceAction> actions = new CopyOnWriteArrayList<>();
 

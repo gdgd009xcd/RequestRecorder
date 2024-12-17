@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 
 /** @author gdgd009xcd */
 @SuppressWarnings({"unchecked", "serial"})
-public class MyFirstJPanel extends JPanel {
+public final class MyFirstJPanel extends JPanel {
 
     /** Creates new form MyFirstJPanel */
     public MyFirstJPanel() {

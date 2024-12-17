@@ -4,7 +4,7 @@ import static org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables.ZA
 
 import java.awt.CardLayout;
 import java.awt.Font;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import javax.swing.*;
@@ -36,7 +36,7 @@ import org.zaproxy.zap.view.ZapMenuItem;
  *
  * @see #hook(ExtensionHook)
  */
-public class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
+public final class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
 
     // The name is public so that other extensions can access it
     public static final String NAME = "ExtensionAutoMacroBuilder";
@@ -281,8 +281,8 @@ public class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
     @Override
     public URL getURL() {
         try {
-            return new URL(AMBURL);
-        } catch (MalformedURLException e) {
+            return new URI(AMBURL).toURL();
+        } catch (Exception e) {
             return null;
         }
     }

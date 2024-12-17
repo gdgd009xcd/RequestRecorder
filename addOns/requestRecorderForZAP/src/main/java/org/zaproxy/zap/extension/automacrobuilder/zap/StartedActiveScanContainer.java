@@ -17,6 +17,7 @@ import org.zaproxy.zap.extension.ascan.ActiveScan;
 import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTrace;
 import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTraceParams;
 import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTraceProvider;
+import org.zaproxy.zap.extension.automacrobuilder.ParmGenUtil;
 import org.zaproxy.zap.extension.automacrobuilder.generated.MacroBuilderUI;
 
 /**
@@ -147,7 +148,7 @@ public class StartedActiveScanContainer {
      * <p>this method called at ScannerHook's beforeScan
      */
     public void addTheadid() {
-        STARTED_THREADS.set(Thread.currentThread().getId());
+        STARTED_THREADS.set(ParmGenUtil.getThreadId(Thread.currentThread()));
     }
 
     /**
@@ -180,7 +181,11 @@ public class StartedActiveScanContainer {
      * @param uuid
      */
     public void addUUID(UUID uuid) {
-        LOGGER4J.debug("addUUID:" + uuid + "currentThread:" + Thread.currentThread().getId());
+        LOGGER4J.debug(
+                "addUUID:"
+                        + uuid
+                        + "currentThread:"
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
         STARTED_UUIDS.set(uuid);
     }
 
@@ -191,7 +196,10 @@ public class StartedActiveScanContainer {
      */
     public void removeUUID() {
         LOGGER4J.debug(
-                "removeUUID:" + getUUID() + " currentThread:" + Thread.currentThread().getId());
+                "removeUUID:"
+                        + getUUID()
+                        + " currentThread:"
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
         STARTED_UUIDS.remove();
     }
 
@@ -215,7 +223,7 @@ public class StartedActiveScanContainer {
                 "getRunningInstance UUID:"
                         + uuid
                         + "currentThread:"
-                        + Thread.currentThread().getId());
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
         return this.pmtProvider.getRunningInstance(uuid);
     }
 
@@ -328,14 +336,14 @@ public class StartedActiveScanContainer {
     protected void setCustomActiveScanPmtParamsOfThread(ParmGenMacroTraceParams pmtParams) {
         LOGGER4J.debug(
                 "setCustomActiveScanPmtParamsOfThread at threadid:"
-                        + Thread.currentThread().getId());
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
         CUSTOMACTIVESCAN_PMTPARAMS.set(pmtParams);
     }
 
     protected ParmGenMacroTraceParams getCustomActiveScanPmtParamsOfThread() {
         LOGGER4J.debug(
                 "get(remove)CustomActiveScanPmtParamsOfThread at threadid:"
-                        + Thread.currentThread().getId());
+                        + ParmGenUtil.getThreadId(Thread.currentThread()));
         try {
             return CUSTOMACTIVESCAN_PMTPARAMS.get();
         } finally {

@@ -7,6 +7,12 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 env:
+  # predefined environment names of java jdk path in ubuntu-latest
+  # JAVA_HOME_8_X64
+  # JAVA_HOME_11_X64
+  # JAVA_HOME_17_X64
+  # JAVA_HOME_21_X64
+  JAVA_ENV_NAME: 'JAVA_HOME_11_X64'
   ZAP_ADDON_BUILD_DIR: 'addOns/requestRecorderForZAP/build/zapAddOn'
   ZAP_ADDON_BUILD_TASK: 'addOns:requestRecorderForZAP:jarZapAddOn'
 
@@ -15,6 +21,14 @@ jobs:
     name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
+      - name: setenv JAVA_HOME
+        run: |
+          echo "JAVA_HOME=$${{ env.JAVA_ENV_NAME }}" >> $GITHUB_ENV
+      - name: add JAVA_HOME/bin to PATH
+        run: |
+          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+      - name: check java version
+        run: java --version
       - name: set env.ZAP_ADDON_BUILD_BIN_DIR
         run: |
           echo "ZAP_ADDON_BUILD_BIN_DIR=${{env.ZAP_ADDON_BUILD_DIR}}/bin" >> $GITHUB_ENV

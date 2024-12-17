@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Level;
  *
  * @author gdgd009xcd
  */
-public class OneThreadProcessor {
+public final class OneThreadProcessor {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     final Level DEBUGPROCESS = Level.getLevel("DEBUGPROCESS");
@@ -53,7 +53,7 @@ public class OneThreadProcessor {
         this.doaction = provider.getDoActionInstance();
         this.seqno = provider.getSequnceNo();
         this.th = th;
-        this.id = th.getId();
+        this.id = ParmGenUtil.getThreadId(th);
         this.tm = tm;
         LOGGER4J.log(DEBUGPROCESS, "ProcessCreated:" + id);
         this.isend = false;
@@ -80,7 +80,7 @@ public class OneThreadProcessor {
         this.doaction = provider.getDoActionInstance();
         this.seqno = provider.getSequnceNo();
         this.th = th;
-        this.id = th.getId();
+        this.id = ParmGenUtil.getThreadId(th);
         this.tm = tm;
         LOGGER4J.log(DEBUGPROCESS, "ProcessReplaced:" + id);
         this.isend = false;

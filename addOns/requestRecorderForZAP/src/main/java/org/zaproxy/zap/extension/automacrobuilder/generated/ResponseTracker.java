@@ -30,7 +30,7 @@ import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public final class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
 

@@ -3,6 +3,11 @@ All notable changes to this add-on will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [v1.2.3] - 2024-12-17
+### Changed
+- maintenance: code was changed to prepare for new java version and ubuntu 24.04
+- maintenance: Added description to README.md for compiling with IntelliJ IDEA.
+
 ## [v1.2.2] - 2024-12-07
 ### Changed
 - maintenance: The GUI title has also changed to reflect this repository name change.

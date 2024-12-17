@@ -24,7 +24,7 @@ import javax.swing.table.TableCellRenderer;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class LineWrapRenderer extends JTextArea implements TableCellRenderer {
+public final class LineWrapRenderer extends JTextArea implements TableCellRenderer {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 

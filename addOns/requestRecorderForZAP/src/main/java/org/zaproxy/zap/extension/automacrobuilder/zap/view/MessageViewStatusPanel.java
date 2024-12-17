@@ -9,7 +9,7 @@ import java.awt.*;
 import static org.zaproxy.zap.extension.automacrobuilder.zap.ExtensionAutoMacroBuilder.A_TAB_ICON;
 
 @SuppressWarnings("serial")
-public class MessageViewStatusPanel extends AbstractPanel {
+public final class MessageViewStatusPanel extends AbstractPanel {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
