@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("serial")
-public class CustomVectorInserter extends AbstractParamPanel implements CustomScanPanel {
+public final class CustomVectorInserter extends AbstractParamPanel implements CustomScanPanel {
     private final static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     private GridBagLayout gridBagLayout;

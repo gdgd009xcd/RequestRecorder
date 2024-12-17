@@ -20,6 +20,11 @@ import java.awt.*;
 @SuppressWarnings("serial")
 public abstract class GridBagJDialog<T> extends JDialog implements DisposeChildInterface {
 
+    private int fill;
+    private int anchor;
+    private Component mainPanel;
+    private T optionalObject;
+
     /**
      * convenience constructor
      *
@@ -29,7 +34,27 @@ public abstract class GridBagJDialog<T> extends JDialog implements DisposeChildI
      */
     public GridBagJDialog(Window owner, String title, ModalityType modalityType) {
         super(owner, title, modalityType);
-        init(GridBagConstraints.BOTH, -1, createMainPanelContent(null, null));
+        this.fill = GridBagConstraints.BOTH;
+        this.anchor = -1;
+        this.mainPanel = null;
+        this.optionalObject = null;
+    }
+
+    /**
+     * This method must specify in the final class's constructor,<br>
+     * immediately following the super() method.<br>
+     * Ex:
+     * <pre>
+     * someDialog extends GridBagJDialog...
+     * public someDialog() {
+     *   super(...);
+     *   postSuper();
+     *   ... some codes....
+     * }
+     * </pre>
+     */
+    public final void postSuper() {
+        init(this.fill, this.anchor, createMainPanelContent(this.mainPanel, this.optionalObject));
     }
 
     /**
@@ -56,29 +81,45 @@ public abstract class GridBagJDialog<T> extends JDialog implements DisposeChildI
      */
     public GridBagJDialog(Window owner, String title, ModalityType modalityType, T optionalObject, int fill) {
         super(owner, title, modalityType);
-        init(fill, -1, createMainPanelContent(null, optionalObject));
+        this.fill = fill;
+        this.anchor = -1;
+        this.mainPanel = null;
+        this.optionalObject = optionalObject;
     }
 
     public GridBagJDialog(Dialog dialog, String title, ModalityType modalityType, T optionalObject, int fill) {
         super(dialog, title, modalityType);
-        init(fill, -1, createMainPanelContent(null, optionalObject));
+        this.fill = fill;
+        this.anchor = -1;
+        this.mainPanel = null;
+        this.optionalObject = optionalObject;
     }
 
     public GridBagJDialog(Frame frame, String title, ModalityType modalityType, T optionalObject, int fill) {
         super(frame, title, modalityType);
-        init(fill, -1, createMainPanelContent(null, optionalObject));
+        this.fill = fill;
+        this.anchor = -1;
+        this.mainPanel = null;
+        this.optionalObject = optionalObject;
     }
 
     public GridBagJDialog(Component mainPanel, String title, ModalityType modalityType, T optionalObject, int fill) {
         super(SwingUtilities.windowForComponent(mainPanel), title, modalityType);
-        init(fill, -1, createMainPanelContent(mainPanel, optionalObject));
+        this.fill = fill;
+        this.anchor = -1;
+        this.mainPanel = mainPanel;
+        this.optionalObject = optionalObject;
     }
 
 
     public GridBagJDialog(Dialog dialog, Component mainPanel, String title, ModalityType modalityType, T optionalObject, int fill) {
         super(dialog, title, modalityType);
-        init(fill, -1, createMainPanelContent(mainPanel, optionalObject));
+        this.fill = fill;
+        this.anchor = -1;
+        this.mainPanel = mainPanel;
+        this.optionalObject = optionalObject;
     }
+
     /**
      *
      * @param owner  You may set owner parameter by<BR> SwingUtilities.windowForComponent(yourComponent)<P></P><P></P>
@@ -109,12 +150,18 @@ public abstract class GridBagJDialog<T> extends JDialog implements DisposeChildI
      */
     public GridBagJDialog(Window owner, String title, ModalityType modalityType, T optionalObject, int fill, int anchor) {
         super(owner, title, modalityType);
-        init(fill, anchor, createMainPanelContent(null, optionalObject));
+        this.fill = fill;
+        this.anchor = anchor;
+        this.mainPanel = null;
+        this.optionalObject = optionalObject;
     }
 
     public GridBagJDialog(Dialog dialog, Component component, String title, ModalityType modalityType, T optionalObject, int fill, int anchor) {
         super(dialog, title, modalityType);
-        init(fill, anchor, createMainPanelContent(null, optionalObject));
+        this.fill = fill;
+        this.anchor = anchor;
+        this.mainPanel = null;
+        this.optionalObject = optionalObject;
     }
 
 
@@ -142,7 +189,7 @@ public abstract class GridBagJDialog<T> extends JDialog implements DisposeChildI
      *     &nbsp;}<br>
      * }
      */
-    protected void init(int fill, int anchor, Component mainPanelContent) {
+    private void init(int fill, int anchor, Component mainPanelContent) {
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         GridBagLayout layout = new GridBagLayout();
         JPanel panel = new JPanel();

@@ -31,7 +31,7 @@ import org.zaproxy.zap.extension.automacrobuilder.view.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenRegex extends javax.swing.JDialog {
+public final class ParmGenRegex extends javax.swing.JDialog {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();

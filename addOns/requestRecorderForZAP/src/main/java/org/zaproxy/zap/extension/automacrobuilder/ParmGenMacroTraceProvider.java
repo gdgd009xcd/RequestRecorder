@@ -218,7 +218,7 @@ public class ParmGenMacroTraceProvider {
                     "removeEndInstance failed by exception:"
                             + e.getMessage()
                             + " thread:"
-                            + Thread.currentThread().getId());
+                            + ParmGenUtil.getThreadId(Thread.currentThread()));
         }
     }
 

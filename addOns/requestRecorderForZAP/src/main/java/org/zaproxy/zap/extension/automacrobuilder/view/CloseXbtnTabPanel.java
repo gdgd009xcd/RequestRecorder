@@ -9,7 +9,7 @@ import org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables;
 import org.zaproxy.zap.extension.automacrobuilder.generated.MacroBuilderUI;
 
 @SuppressWarnings("serial")
-public class CloseXbtnTabPanel extends JPanel {
+public final class CloseXbtnTabPanel extends JPanel {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();

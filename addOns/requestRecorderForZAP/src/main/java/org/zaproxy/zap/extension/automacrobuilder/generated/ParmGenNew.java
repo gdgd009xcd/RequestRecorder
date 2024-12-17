@@ -28,7 +28,7 @@ import org.zaproxy.zap.extension.automacrobuilder.zap.ZapUtil;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public final class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
     
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     

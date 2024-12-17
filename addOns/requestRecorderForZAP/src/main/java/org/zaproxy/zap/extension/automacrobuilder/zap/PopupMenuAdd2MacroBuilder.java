@@ -39,7 +39,8 @@ import org.zaproxy.zap.model.StructuralSiteNode;
 import org.zaproxy.zap.model.Target;
 import org.zaproxy.zap.view.popup.PopupMenuItemSiteNodeContainer;
 
-public class PopupMenuAdd2MacroBuilder extends PopupMenuItemSiteNodeContainer
+@SuppressWarnings("serial")
+public final class PopupMenuAdd2MacroBuilder extends PopupMenuItemSiteNodeContainer
         implements InterfaceLangOKNG {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =

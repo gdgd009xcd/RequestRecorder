@@ -23,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenTokenJDialog extends javax.swing.JDialog {
+public final class ParmGenTokenJDialog extends javax.swing.JDialog {
 
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();

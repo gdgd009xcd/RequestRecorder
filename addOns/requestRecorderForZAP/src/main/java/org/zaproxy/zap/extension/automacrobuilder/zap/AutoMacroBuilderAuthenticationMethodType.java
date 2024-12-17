@@ -41,7 +41,7 @@ import org.zaproxy.zap.session.WebSession;
 import org.zaproxy.zap.users.User;
 import org.zaproxy.zap.view.LayoutHelper;
 
-public class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMethodType {
+public final class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMethodType {
     public static final String CONTEXT_CONFIG_AUTH_AUTOMACRO =
             AuthenticationMethod.CONTEXT_CONFIG_AUTH + ".automacro";
     public static final String CONTEXT_CONFIG_AUTH_AUTOMACRO_ITEMS =
@@ -284,7 +284,7 @@ public class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMeth
     }
 
     @SuppressWarnings("serial")
-    public class AutoMacroBuilderAuthenticationMethodOptionsPanel
+    public final class AutoMacroBuilderAuthenticationMethodOptionsPanel
             extends AbstractAuthenticationMethodOptionsPanel {
 
         private AutoMacroBuilderAuthenticationMethod method;

@@ -26,7 +26,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenAddParms extends javax.swing.JDialog implements interfaceParmGenWin {
+public final class ParmGenAddParms extends javax.swing.JDialog implements interfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     ParmGenNew parentwin;// parenrt window which create this dialog.

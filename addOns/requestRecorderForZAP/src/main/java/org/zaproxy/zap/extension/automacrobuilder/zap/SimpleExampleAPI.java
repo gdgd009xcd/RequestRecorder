@@ -27,7 +27,7 @@ import org.zaproxy.zap.extension.api.ApiImplementor;
 import org.zaproxy.zap.extension.api.ApiResponse;
 import org.zaproxy.zap.extension.api.ApiResponseElement;
 
-public class SimpleExampleAPI extends ApiImplementor {
+public final class SimpleExampleAPI extends ApiImplementor {
     private static final String PREFIX = "simpleExample";
 
     private ExtensionAutoMacroBuilder extension;

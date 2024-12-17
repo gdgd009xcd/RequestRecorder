@@ -24,7 +24,7 @@ public class LockInstance {
     }
 
     public synchronized long lock() {
-        long tid = Thread.currentThread().getId();
+        long tid = ParmGenUtil.getThreadId(Thread.currentThread());
         LOGGER4J.debug("start lock id:" + tid);
         if (this.lockerthreadid == tid) {
             unlock(-1);
@@ -49,7 +49,7 @@ public class LockInstance {
     }
 
     public synchronized void unlock(long lockerthread) {
-        long thisid = Thread.currentThread().getId();
+        long thisid = ParmGenUtil.getThreadId(Thread.currentThread());
         if (locked) {
             if (lockerthread != this.lockerthreadid) {
                 LOGGER4J.error(

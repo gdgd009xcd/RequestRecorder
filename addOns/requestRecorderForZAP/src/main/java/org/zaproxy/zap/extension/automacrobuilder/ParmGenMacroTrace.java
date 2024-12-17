@@ -194,7 +194,7 @@ public class ParmGenMacroTrace extends ClientDependent {
         }
 
         nobj.sender = sender;
-        nobj.threadid = Thread.currentThread().getId();
+        nobj.threadid = ParmGenUtil.getThreadId(Thread.currentThread());
         // nobj.setUUID(UUIDGenerator.getUUID()); // already set in super.constructor
         nobj.rlist = this.rlist; // reference
         nobj.originalrlist = this.originalrlist; // reference
@@ -245,7 +245,7 @@ public class ParmGenMacroTrace extends ClientDependent {
     public ParmGenMacroTrace getCopyInstanceForSession() {
         ParmGenMacroTrace nobj = new ParmGenMacroTrace();
         nobj.sender = this.sender;
-        nobj.threadid = Thread.currentThread().getId();
+        nobj.threadid = ParmGenUtil.getThreadId(Thread.currentThread());
         nobj.postmacro_RequestResponse =
                 this.postmacro_RequestResponse != null
                         ? this.postmacro_RequestResponse.clone()

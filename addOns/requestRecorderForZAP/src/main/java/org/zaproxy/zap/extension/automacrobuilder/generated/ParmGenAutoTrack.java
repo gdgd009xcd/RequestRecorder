@@ -19,7 +19,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenAutoTrack extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin{
+public final class ParmGenAutoTrack extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin{
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
     ParmGenNew parentwin;

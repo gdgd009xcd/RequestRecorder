@@ -24,7 +24,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.text.*;
 
 @SuppressWarnings({"unchecked", "serial"})
-public class StyledDocumentWithChunk extends ManagedStyledDocument {
+public final class StyledDocumentWithChunk extends ManagedStyledDocument {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 

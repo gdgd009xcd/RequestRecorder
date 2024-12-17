@@ -29,6 +29,7 @@ import org.zaproxy.zap.extension.automacrobuilder.ParmGenBinUtil;
  * this model does not rely on ZAP library
  *
  */
+@SuppressWarnings("serial")
 public class CustomHttpPanelHexModel extends AbstractTableModel {
 
     private static final String[] hexSymbols = {

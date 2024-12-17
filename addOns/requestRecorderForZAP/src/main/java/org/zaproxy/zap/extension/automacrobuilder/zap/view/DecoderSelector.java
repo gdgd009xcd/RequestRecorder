@@ -20,17 +20,17 @@ import java.awt.event.ActionListener;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public class DecoderSelector extends GridBagJDialog<Object> {
+public final class DecoderSelector extends GridBagJDialog<Object> {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
-    // ### START: these parameters should not set null value from below this line
+    // ### START: GUI parameters. these parameters should initialize createMainPanelContent
     JComboBox<DecodeType> decodeComboBox;
     JTextPane textPane;
     JLabel infoLabel;
-    // ### END: these parameters should not set null value until this line
+    // ### END:  GUI parameters. these parameters should initialize createMainPanelContent
 
     private StartEndPosition startEndPosition;
     private MacroBuilderUI mbui;
@@ -38,11 +38,14 @@ public class DecoderSelector extends GridBagJDialog<Object> {
 
     public DecoderSelector(MacroBuilderUI mbui, StartEndPosition startEndPosition, Encode enc) {
         super(SwingUtilities.windowForComponent(mbui), bundle.getString("DecoderSelector.dialog.title.text"), Dialog.ModalityType.DOCUMENT_MODAL);
+        postSuper();
 
         this.enc = enc;
         this.mbui = mbui;
         this.startEndPosition = startEndPosition;
         this.textPane.setText(startEndPosition.value);
+
+
     }
 
     @Override
