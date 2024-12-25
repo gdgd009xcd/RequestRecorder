@@ -25,7 +25,7 @@ import org.zaproxy.zap.extension.automacrobuilder.ThreadManagerProvider;
 import org.zaproxy.zap.extension.forceduser.ExtensionForcedUser;
 import org.zaproxy.zap.network.HttpSenderListener;
 
-public final class MyFirstSenderListener implements HttpSenderListener {
+public class MyFirstSenderListener implements HttpSenderListener {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -45,7 +45,7 @@ public final class MyFirstSenderListener implements HttpSenderListener {
             int forcedUserListenerOrder = extensionForcedUser.getListenerOrder();
             this.listerOrder = forcedUserListenerOrder + 1; // this value must be larger than
             // current ExtensionForcedUser.getListenerOrder()
-            LOGGER4J.info(
+            LOGGER4J.debug(
                     "listnerOrder["
                             + this.listerOrder
                             + "] "

@@ -24,11 +24,16 @@ import javax.swing.table.TableCellRenderer;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class LineWrapRenderer extends JTextArea implements TableCellRenderer {
+public class LineWrapRenderer extends JTextArea implements TableCellRenderer {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 
-    public LineWrapRenderer() {
+    /**
+     * Constructor for the LineWrapRenderer class.<br>
+     * this constructor is package-private.<br>
+     * this means that this class can be instantiated only in this package.
+     */
+    LineWrapRenderer() {
         super();
         setLineWrap(true);
     }

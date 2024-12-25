@@ -11,7 +11,7 @@ import org.zaproxy.zap.extension.automacrobuilder.view.GridBagJDialog;
 import org.zaproxy.zap.extension.automacrobuilder.zap.AutoMacroBuilderAuthenticationMethodType;
 
 @SuppressWarnings("serial")
-public final class RequestListJDialog extends GridBagJDialog<Object> {
+public class RequestListJDialog extends GridBagJDialog<Object> {
     AutoMacroBuilderAuthenticationMethodType.AutoMacroBuilderAuthenticationMethodOptionsPanel
             optionPanel;
 
@@ -27,20 +27,45 @@ public final class RequestListJDialog extends GridBagJDialog<Object> {
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 
-    public RequestListJDialog(
-            AutoMacroBuilderAuthenticationMethodType
-                            .AutoMacroBuilderAuthenticationMethodOptionsPanel
-                    optionPanel) {
+
+    /**
+     * create new instance of RequestListJDialog
+     *
+     * @param optionPanel
+     * @return new instance of RequestListJDialog
+     */
+    public static RequestListJDialog newInstance(AutoMacroBuilderAuthenticationMethodType
+                                                         .AutoMacroBuilderAuthenticationMethodOptionsPanel
+                                                         optionPanel) {
+        return new RequestListJDialog().buildThis(optionPanel);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * see newInstance() method.<br>
+     * In extended class, you must call super.buildThis(optionPanel) in your buildThis method.
+     *
+     * @param optionPanel
+     * @return this instance
+     */
+    protected RequestListJDialog buildThis(AutoMacroBuilderAuthenticationMethodType
+                    .AutoMacroBuilderAuthenticationMethodOptionsPanel
+                    optionPanel){
+        postSuper();
+        this.optionPanel = optionPanel;
+        setUpRequestList();
+        return this;
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     */
+    protected RequestListJDialog() {
         super(
                 View.getSingleton().getSessionDialog(),
                 bundle.getString("MacroBuilderUI.MacroRequestListLabelTitle.text"),
                 ModalityType.DOCUMENT_MODAL);
-        postSuper();
-
-        this.optionPanel = optionPanel;
-        setUpRequestList();
-
-
     }
 
     public void setUpRequestList() {

@@ -267,7 +267,7 @@ public class StartedActiveScanContainer {
 
     public void addCustomActiveScanPmtParamsByScanner(
             Scanner scanner, ParmGenMacroTraceParams pmtParams) {
-        LOGGER4J.info(
+        LOGGER4J.debug(
                 "addCustomActiveScanPmtParamsByScanner scanid="
                         + scanner.getId()
                         + " selectedRequestNo="

@@ -29,6 +29,8 @@ import org.zaproxy.zap.utils.FontUtils;
 import org.zaproxy.zap.view.ZapMenuItem;
 
 /**
+ * this class must be defined as final class.<br>
+ * otherwise, it will cause some errors when displaying bundle resources.<br>
  * An example ZAP extension which adds a top level menu item, a pop up menu item and a status panel.
  *
  * <p>{@link ExtensionAdaptor} classes are the main entry point for adding/loading functionalities
@@ -69,16 +71,21 @@ public final class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 
-    public ExtensionAutoMacroBuilder() {
-        super(NAME);
+    private ExtensionAutoMacroBuilder buildThis() {
         setI18nPrefix(PREFIX);
         EnvironmentVariables.isSaved();
         this.pmtProvider = new ParmGenMacroTraceProvider();
         this.pmt = pmtProvider.getBaseInstance(0);
 
         if (this.mbui == null) {
-            this.mbui = new MacroBuilderUI(this.pmtProvider, this);
+            this.mbui = MacroBuilderUI.newInstance(this.pmtProvider, this);
         }
+        return this;
+    }
+
+    public ExtensionAutoMacroBuilder() {
+        super(NAME);
+        buildThis();
     }
 
     @Override
@@ -98,7 +105,7 @@ public final class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
             extensionHook
                     .getHookMenu()
                     .addPopupMenuItem(
-                            new PopUpMenuItem(
+                            PopUpMenuItem.newInstance(
                                     this.mbui,
                                     this.extwrapper.getStartedActiveScanContainer(),
                                     "org.zaproxy.zap.extension.customactivescan.view.ScanLogPanel",
@@ -107,7 +114,7 @@ public final class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
                                     A_TAB_ICON));
 
             this.messageViewStatusPanel =
-                    new MessageViewStatusPanel(extwrapper, this.mbui, extensionHook);
+                    MessageViewStatusPanel.newInstance(extwrapper, this.mbui, extensionHook);
             extensionHook.getHookView().addStatusPanel(this.messageViewStatusPanel);
             extensionHook
                     .getHookView()
@@ -260,7 +267,7 @@ public final class ExtensionAutoMacroBuilder extends ExtensionAdaptor {
     private PopupMenuAdd2MacroBuilder getPopupMenuAdd2MacroBuilder() {
         if (popupadd2MacroBuilder == null) {
             popupadd2MacroBuilder =
-                    new PopupMenuAdd2MacroBuilder(
+                    PopupMenuAdd2MacroBuilder.newInstance(
                             this.mbui,
                             EnvironmentVariables.getZapResourceString(
                                     "autoMacroBuilder.popup.title.PopupMenuAdd2MacroBuilder"));

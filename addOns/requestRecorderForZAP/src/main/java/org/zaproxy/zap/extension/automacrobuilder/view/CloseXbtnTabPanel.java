@@ -9,7 +9,7 @@ import org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables;
 import org.zaproxy.zap.extension.automacrobuilder.generated.MacroBuilderUI;
 
 @SuppressWarnings("serial")
-public final class CloseXbtnTabPanel extends JPanel {
+public class CloseXbtnTabPanel extends JPanel {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -20,9 +20,28 @@ public final class CloseXbtnTabPanel extends JPanel {
 
     JButton closeJButton = new JButton();
 
-    public CloseXbtnTabPanel(String tabTitle, java.awt.event.ActionListener listener) {
-        super(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    /**
+     * Create a new instance of CloseXbtnTabPanel.<br>
+     * you must define and call this method for creating new instance in your extended class<br>
+     *
+     * @param tabTitle
+     * @param listener
+     * @return new instance of CloseXbtnTabPanel
+     */
+    public static CloseXbtnTabPanel newInstance(String tabTitle, java.awt.event.ActionListener listener) {
+        return new CloseXbtnTabPanel(tabTitle, listener).buildThis(tabTitle, listener);
+    }
 
+    /**
+     * build this instance.<br>
+     * you must define and call this method in newInstance method.<br>
+     * In your extended class, you must override this method and call super.buildThis() in it.
+     *
+     * @param tabTitle
+     * @param listener
+     * @return this instance
+     */
+    protected CloseXbtnTabPanel buildThis(String tabTitle, java.awt.event.ActionListener listener) {
         JLabel tabtitleJLabel = new JLabel(tabTitle);
         this.add(tabtitleJLabel);
 
@@ -39,6 +58,18 @@ public final class CloseXbtnTabPanel extends JPanel {
         setEnableCloseButton(false);
 
         closeJButton.addActionListener(listener);
+        return this;
+    }
+
+    /**
+     * Do not use this constructor directly for instanciating.<br>
+     * Use newInstance instead.
+     *
+     * @param tabTitle
+     * @param listener
+     */
+    protected CloseXbtnTabPanel(String tabTitle, java.awt.event.ActionListener listener) {
+        super(new FlowLayout(FlowLayout.CENTER, 0, 0));
     }
 
     public void setEnableCloseButton(boolean enable) {

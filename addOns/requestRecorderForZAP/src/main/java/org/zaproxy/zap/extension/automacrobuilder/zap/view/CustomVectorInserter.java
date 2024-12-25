@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("serial")
-public final class CustomVectorInserter extends AbstractParamPanel implements CustomScanPanel {
+public class CustomVectorInserter extends AbstractParamPanel implements CustomScanPanel {
     private final static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     private GridBagLayout gridBagLayout;
@@ -47,13 +47,41 @@ public final class CustomVectorInserter extends AbstractParamPanel implements Cu
     // The index of the start of the URL path e.g. after https://www.example.com:1234/ - no point
     // attacking this
     private int urlPathStart = -1;
-    public CustomVectorInserter(Target target, ExtensionActiveScanWrapper extension) {
-        super();
+
+    /**
+     * create new instance of CustomVectorInserter
+     *
+     * @param target
+     * @param extension
+     * @return CustomVectorInserter instance
+     */
+    public static CustomVectorInserter newInstance(Target target, ExtensionActiveScanWrapper extension) {
+        return new CustomVectorInserter().buildThis(target, extension);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * see newInstance() method.<br>
+     * In extended class, you must call super.buildThis(target, extension) in your buildThis method.
+     *
+     * @param target
+     * @param extension
+     * @return this instance
+     */
+    protected CustomVectorInserter buildThis(Target target, ExtensionActiveScanWrapper extension) {
         gridBagLayout = new GridBagLayout();
         this.setLayout(gridBagLayout);
         this.extensionActiveScanWrapper =  extension;
         this.target = target;
         initialize(target);
+        return this;
+    }
+
+    /**
+     * Do not use this constructor. It is used by newInstance method.
+     */
+    protected CustomVectorInserter() {
+        super();
     }
 
     public void updateInit(Target target) {
@@ -116,7 +144,7 @@ public final class CustomVectorInserter extends AbstractParamPanel implements Cu
         JScrollPane requestScroller = new JScrollPane();
         requestScroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         requestScroller.setViewportView(requestPane);
-        BoxAndScrollerPanel boxAndScrollerPanel = new BoxAndScrollerPanel(
+        BoxAndScrollerPanel boxAndScrollerPanel = BoxAndScrollerPanel.newInstance(
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         boxAndScrollerPanel.setComponentToScroller(insertedVectorList);

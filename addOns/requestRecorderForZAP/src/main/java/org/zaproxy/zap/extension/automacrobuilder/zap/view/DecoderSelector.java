@@ -20,7 +20,7 @@ import java.awt.event.ActionListener;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public final class DecoderSelector extends GridBagJDialog<Object> {
+public class DecoderSelector extends GridBagJDialog<Object> {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -36,16 +36,45 @@ public final class DecoderSelector extends GridBagJDialog<Object> {
     private MacroBuilderUI mbui;
     private Encode enc;
 
-    public DecoderSelector(MacroBuilderUI mbui, StartEndPosition startEndPosition, Encode enc) {
-        super(SwingUtilities.windowForComponent(mbui), bundle.getString("DecoderSelector.dialog.title.text"), Dialog.ModalityType.DOCUMENT_MODAL);
-        postSuper();
+    /**
+     * create new instance of DecoderSelector
+     *
+     * @param mbui
+     * @param startEndPosition
+     * @param enc
+     * @return new instance of DecoderSelector
+     */
+    public static DecoderSelector newInstance(MacroBuilderUI mbui, StartEndPosition startEndPosition, Encode enc) {
+        return new DecoderSelector(mbui).buildThis(mbui, startEndPosition, enc);
+    }
 
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * see newInstance() method.<br>
+     * In extended class, you must call super.buildThis(mbui, startEndPosition, enc) in your buildThis method.
+     *
+     * @param mbui
+     * @param startEndPosition
+     * @param enc
+     * @return this instance
+     */
+    protected DecoderSelector buildThis(MacroBuilderUI mbui, StartEndPosition startEndPosition, Encode enc) {
+        postSuper();
         this.enc = enc;
         this.mbui = mbui;
         this.startEndPosition = startEndPosition;
         this.textPane.setText(startEndPosition.value);
+        return this;
+    }
 
-
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param mbui
+     */
+    protected DecoderSelector(MacroBuilderUI mbui) {
+        super(SwingUtilities.windowForComponent(mbui), bundle.getString("DecoderSelector.dialog.title.text"), Dialog.ModalityType.DOCUMENT_MODAL);
     }
 
     @Override
@@ -70,7 +99,7 @@ public final class DecoderSelector extends GridBagJDialog<Object> {
         decodeComboBox =  new JComboBox<>(comboModel);
 
         textPane = new JTextPane();
-        BoxAndScrollerPanel boxAndScrollerPanel = new BoxAndScrollerPanel();
+        BoxAndScrollerPanel boxAndScrollerPanel = BoxAndScrollerPanel.newInstance();
         infoLabel = new JLabel("");
         boxAndScrollerPanel.addComponentToBoxPanelAtYaxis(decodeComboBox);
         boxAndScrollerPanel.addComponentToBoxPanelAtYaxis(infoLabel);

@@ -41,7 +41,7 @@ import org.zaproxy.zap.session.WebSession;
 import org.zaproxy.zap.users.User;
 import org.zaproxy.zap.view.LayoutHelper;
 
-public final class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMethodType {
+public class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMethodType {
     public static final String CONTEXT_CONFIG_AUTH_AUTOMACRO =
             AuthenticationMethod.CONTEXT_CONFIG_AUTH + ".automacro";
     public static final String CONTEXT_CONFIG_AUTH_AUTOMACRO_ITEMS =
@@ -283,6 +283,10 @@ public final class AutoMacroBuilderAuthenticationMethodType extends Authenticati
         }
     }
 
+    /**
+     * Inner class cannot define static newInstance method,<br>
+     * so this class was defined as final class
+     */
     @SuppressWarnings("serial")
     public final class AutoMacroBuilderAuthenticationMethodOptionsPanel
             extends AbstractAuthenticationMethodOptionsPanel {
@@ -305,7 +309,6 @@ public final class AutoMacroBuilderAuthenticationMethodType extends Authenticati
             super();
             firstCalled = true;
             this.context = context;
-
             initialize(mbUI);
         }
 
@@ -387,7 +390,7 @@ public final class AutoMacroBuilderAuthenticationMethodType extends Authenticati
             this.tabIndexConfig = new JButton("Config");
             this.tabIndexConfig.addActionListener(
                     e -> {
-                        new RequestListJDialog(this).setVisible(true);
+                        RequestListJDialog.newInstance(this).setVisible(true);
                     });
             this.add(this.tabIndexConfig, LayoutHelper.getGBC(0, rowy, 1, 2, 0.0d, 0.0d));
             this.add(

@@ -31,7 +31,7 @@ import org.zaproxy.zap.extension.automacrobuilder.view.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenRegex extends javax.swing.JDialog {
+public class ParmGenRegex extends javax.swing.JDialog {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -131,10 +131,30 @@ public final class ParmGenRegex extends javax.swing.JDialog {
             }
         }
     }
+
     /**
-     * Regex Dialog for configuring tracking parameter manually
+     * new instance of ParmGenRegex<br>
+     * you must define this in your extended class
+     *
+     * @param _parentwin
+     * @param showrequest
+     * @return
      */
-    public ParmGenRegex(InterfaceRegex _parentwin, boolean showrequest) {
+    public static ParmGenRegex newInstance(InterfaceRegex _parentwin, boolean showrequest) {
+        return new ParmGenRegex(_parentwin, showrequest).buildThis(_parentwin, showrequest);
+    }
+
+    /**
+     * you must call buildThis in newInstance method after calling this constructor<br>
+     * See newInstance() method.<br>
+     * In extended class, you must call super.buildThis in overridden buildThis method
+     *
+     * @param _parentwin
+     * @param showrequest
+     * @return this
+     */
+    protected ParmGenRegex buildThis(InterfaceRegex _parentwin, boolean showrequest)
+    {
         initComponents();
         um = new UndoManager();
         original_um = new UndoManager();
@@ -156,18 +176,18 @@ public final class ParmGenRegex extends javax.swing.JDialog {
         }
         OriginalText.setCaretPosition(0);
         Document rexdoc = RegexText.getDocument();
-        
+
         foundTextAttrPos = new ArrayList<>();
 
         addFocusListerToOriginalText();
 
         //RegexTextのUndo/Redo
         rexdoc.addUndoableEditListener(new UndoableEditListener() {
-			public void undoableEditHappened(UndoableEditEvent e) {
+            public void undoableEditHappened(UndoableEditEvent e) {
                 //add edit actions to UndoManager
-				um.addEdit(e.getEdit());
-			}
-		});
+                um.addEdit(e.getEdit());
+            }
+        });
         ManagedStyledDocument origdoc = CastUtils.castToType(OriginalText.getStyledDocument());
         createStyles(origdoc);
 
@@ -175,25 +195,50 @@ public final class ParmGenRegex extends javax.swing.JDialog {
 
         //RegexTextのUndo/Redo
         origdoc.addUndoableEditListener(new UndoableEditListener() {
-			public void undoableEditHappened(UndoableEditEvent e) {
+            public void undoableEditHappened(UndoableEditEvent e) {
                 //add edit actions to UndoManager
-				original_um.addEdit(e.getEdit());
-			}
-		});
+                original_um.addEdit(e.getEdit());
+            }
+        });
+        return this;
+    }
+
+    protected ParmGenRegex(InterfaceRegex _parentwin, boolean showrequest) {
+        super();
     }
 
     /**
-     * Regex dialog for messageView
+     * new instance of ParmGenRegex<br>
+     * you must define this in your extended class
      *
      * @param dialogTitle
      * @param _actionwin
      * @param _reg
      * @param chunkDoc
+     * @return
      */
-    public ParmGenRegex(String dialogTitle,
-            InterfaceParmGenRegexSaveCancelAction _actionwin,
-            String _reg,
-            StyledDocumentWithChunk chunkDoc){
+    public static ParmGenRegex newInstance(String dialogTitle,
+                                           InterfaceParmGenRegexSaveCancelAction _actionwin,
+                                           String _reg,
+                                           StyledDocumentWithChunk chunkDoc) {
+        return new ParmGenRegex(dialogTitle, _actionwin, _reg, chunkDoc).buildThis(dialogTitle, _actionwin, _reg, chunkDoc);
+    }
+
+    /**
+     * you must call buildThis in newInstance method after calling this constructor<br>
+     * See newInstance() method.<br>
+     * In extended class, you must call super.buildThis in overridden buildThis method
+     *
+     * @param dialogTitle
+     * @param _actionwin
+     * @param _reg
+     * @param chunkDoc
+     * @return this
+     */
+    protected ParmGenRegex buildThis(String dialogTitle,
+                                     InterfaceParmGenRegexSaveCancelAction _actionwin,
+                                     String _reg,
+                                     StyledDocumentWithChunk chunkDoc) {
         initComponents();
         setTitle(dialogTitle);
 
@@ -255,23 +300,39 @@ public final class ParmGenRegex extends javax.swing.JDialog {
             Save.setText(regexactionwin.getParmGenRegexSaveBtnText(isLabelSaveBtn));
             Cancel.setText(regexactionwin.getParmGenRegexCancelBtnText(isLabelSaveBtn));
         }
-        
+
         // Undo/Redo for RegexText
         Document rexdoc = RegexText.getDocument();
         rexdoc.addUndoableEditListener(new UndoableEditListener() {
-			public void undoableEditHappened(UndoableEditEvent e) {
-				//add edit actions to UndoManager
-				um.addEdit(e.getEdit());
-			}
-		});
+            public void undoableEditHappened(UndoableEditEvent e) {
+                //add edit actions to UndoManager
+                um.addEdit(e.getEdit());
+            }
+        });
 
         // Undo/Redo for chunkdoc
         this.chunkDoc.addUndoableEditListener(new UndoableEditListener() {
-			public void undoableEditHappened(UndoableEditEvent e) {
-				//add edit actions to UndoManager
-				original_um.addEdit(e.getEdit());
-			}
-		});
+            public void undoableEditHappened(UndoableEditEvent e) {
+                //add edit actions to UndoManager
+                original_um.addEdit(e.getEdit());
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Regex dialog for messageView
+     *
+     * @param dialogTitle
+     * @param _actionwin
+     * @param _reg
+     * @param chunkDoc
+     */
+    protected ParmGenRegex(String dialogTitle,
+            InterfaceParmGenRegexSaveCancelAction _actionwin,
+            String _reg,
+            StyledDocumentWithChunk chunkDoc) {
+        super();
     }
 
     private void addFocusListerToOriginalText() {

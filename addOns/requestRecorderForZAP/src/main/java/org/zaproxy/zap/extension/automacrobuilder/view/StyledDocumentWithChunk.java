@@ -24,7 +24,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.text.*;
 
 @SuppressWarnings({"unchecked", "serial"})
-public final class StyledDocumentWithChunk extends ManagedStyledDocument {
+public class StyledDocumentWithChunk extends ManagedStyledDocument {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 
@@ -68,21 +68,57 @@ public final class StyledDocumentWithChunk extends ManagedStyledDocument {
     private boolean documentFilterMasked =false;
 
     /**
-     * null constructor
+     * create new instance of StyledDocumentWithChunk<br>
+     * null constructor<br>
+     *
+     * @return new instance of StyledDocumentWithChunk
      */
-    public StyledDocumentWithChunk() {
-        super(SwingStyleProvider.createSwingStyle().getStyleContext());
-        createStyles();
+    public static StyledDocumentWithChunk newInstance() {
+        return new StyledDocumentWithChunk().buildThis();
     }
 
     /**
-     * convert Prequest to StyledDocumentWithChunk
+     * build this instance.<br>
+     * you must define and call this method in newInstance method.<br>
+     * In your extended class, you must override this method and call super.buildThis() in it.
+     *
+     * @return this instance
+     */
+    protected StyledDocumentWithChunk buildThis() {
+        createStyles();
+        return this;
+    }
+
+    /**
+     * Do not use this constructor directly for instanciating.<br>
+     * Use newInstance instead.
+     */
+    protected StyledDocumentWithChunk() {
+        super(SwingStyleProvider.createSwingStyle().getStyleContext());
+    }
+
+    /**
+     * create new instance of StyledDocumentWithChunk from Prequest<br>
+     * convert Prequest to StyledDocumentWithChunk<br>
      *
      * @param prequest
      * @param decodeCustomTag true - decode CustomTag | false - no effect
+     * @return new instance of StyledDocumentWithChunk
      */
-    public StyledDocumentWithChunk(PRequest prequest, boolean decodeCustomTag) {
-        super(SwingStyleProvider.createSwingStyle().getStyleContext());
+    public static StyledDocumentWithChunk newInstance(PRequest prequest, boolean decodeCustomTag) {
+        return new StyledDocumentWithChunk().buildThis(prequest, decodeCustomTag);
+    }
+
+    /**
+     * build this instance.<br>
+     * you must define and call this method in newInstance method.<br>
+     * In your extended class, you must override this method and call super.buildThis() in it.
+     *
+     * @param prequest
+     * @param decodeCustomTag
+     * @return this instance
+     */
+    protected StyledDocumentWithChunk buildThis(PRequest prequest, boolean decodeCustomTag) {
         createStyles();
         enc = prequest.getPageEnc();
         host = prequest.getHost();
@@ -100,23 +136,54 @@ public final class StyledDocumentWithChunk extends ManagedStyledDocument {
         if(this.getDocumentFilter() == null){
             this.setDocumentFilter(new MessageRequestDocumentFilter(this));
         }
-    }
-
-    public StyledDocumentWithChunk(PResponse presponse) {
-        super(SwingStyleProvider.createSwingStyle().getStyleContext());
-        createStyles();
-        enc = presponse.getPageEnc();
-        updateResponse(presponse);
+        return this;
     }
 
     /**
-     * create instance from specified chunkdoc this.requestChunks are deepcopied from
-     * chunkdoc.requestChunks. thus this instance is independent from specified chunkdoc.
+     * create new instance of StyledDocumentWithChunk from PResponse<br>
+     *
+     * @param pResponse
+     * @return new instance of StyledDocumentWithChunk
+     */
+    public static StyledDocumentWithChunk newInstance(PResponse pResponse) {
+        return new StyledDocumentWithChunk().buildThis(pResponse);
+    }
+
+    /**
+     * build this instance.<br>
+     * you must define and call this method in newInstance method.<br>
+     * In your extended class, you must override this method and call super.buildThis() in it.
+     *
+     * @param pResponse
+     * @return
+     */
+    protected StyledDocumentWithChunk buildThis(PResponse pResponse){
+        createStyles();
+        enc = pResponse.getPageEnc();
+        updateResponse(pResponse);
+        return this;
+    }
+
+    /**
+     * create instance from specified chunkdoc this.requestChunks are deepcopied from<br>
+     * chunkdoc.requestChunks. thus this instance is independent from specified chunkdoc.<br>
      *
      * @param chunkdoc
+     * @return new instance of StyledDocumentWithChunk
      */
-    public StyledDocumentWithChunk(StyledDocumentWithChunk chunkdoc) {
-        super(SwingStyleProvider.createSwingStyle().getStyleContext());
+    public static StyledDocumentWithChunk newInstance(StyledDocumentWithChunk chunkdoc) {
+        return new StyledDocumentWithChunk().buildThis(chunkdoc);
+    }
+
+    /**
+     * build this instance.<br>
+     * you must define and call this method in newInstance method.<br>
+     * In your extended class, you must override this method and call super.buildThis() in it.
+     *
+     * @param chunkdoc
+     * @return this instance
+     */
+    protected StyledDocumentWithChunk buildThis(StyledDocumentWithChunk chunkdoc) {
         createStyles();
         if (chunkdoc != null) {
             if (chunkdoc.isRequest()) {
@@ -140,6 +207,7 @@ public final class StyledDocumentWithChunk extends ManagedStyledDocument {
                 updateResponse(response);
             }
         }
+        return this;
     }
 
     /**

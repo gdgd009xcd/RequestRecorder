@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 //
 // class AppValue
 //
-public final class AppValue {
+public class AppValue {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
 
@@ -160,7 +160,7 @@ public final class AppValue {
         resRegexPos = -1;
     }
 
-    public AppValue(String _Type, boolean _disabled, String _value) {
+    AppValue(String _Type, boolean _disabled, String _value) {
         initctype();
         setValPart(_Type);
         setEnabled(!_disabled); // NOT
@@ -221,9 +221,9 @@ public final class AppValue {
         setEnabled(!_disabled); // NOT
         // value = _value;
         setVal(_value);
-        setresURL(_resURL);
+        setResURL(_resURL);
         setresRegex(_resRegex);
-        setresPartType(_resPartType);
+        setResPartType(_resPartType);
         setResRegexPosFromString(_resRegexPos);
         token = _token;
         urlencode = _urlenc;
@@ -372,8 +372,12 @@ public final class AppValue {
         return enabled;
     }
 
-    public void setEnabled(boolean b) {
+    private void setEnabled(boolean b) {
         enabled = b;
+    }
+
+    public void setEnabledExported(boolean b) {
+        setEnabled(b);
     }
 
     /**
@@ -437,7 +441,7 @@ public final class AppValue {
         return "";
     }
 
-    public void setresURL(String _url) {
+    private void setResURL(String _url) {
         if (_url == null) _url = "";
         resURL = _url.trim();
         try {
@@ -446,6 +450,10 @@ public final class AppValue {
             Pattern_resURL = null;
             LOGGER4J.error("ERROR: setresURL ", e);
         }
+    }
+
+    public void setResURLExported(String _url) {
+        setResURL(_url);
     }
 
     public String getresURL() {
@@ -478,7 +486,7 @@ public final class AppValue {
         setresRegex(ParmGenUtil.URLdecode(_regex, JSONFileIANACharsetName));
     }
 
-    public void setresRegex(String _regex) {
+    private void setresRegex(String _regex) {
         if (_regex == null) _regex = "";
         resRegex = _regex;
         try {
@@ -494,7 +502,7 @@ public final class AppValue {
      *
      * @param _regex
      */
-    public void setCondRegex(String _regex) {
+    private void setCondRegex(String _regex) {
         if (_regex == null) _regex = "";
         this.condRegex = _regex;
         try {
@@ -587,9 +595,13 @@ public final class AppValue {
         this.replaceZeroSize = b;
     }
 
-    public void setresPartType(String respart) {
+    private void setResPartType(String respart) {
         if (respart == null) respart = "";
         resPartType = parseValPartType(respart);
+    }
+
+    public void setResPartTypeExported(String respart) {
+        setResPartType(respart);
     }
 
     /**
@@ -615,12 +627,16 @@ public final class AppValue {
      *
      * @param _resregexpos
      */
-    public void setResRegexPosFromString(String _resregexpos) {
+    private void setResRegexPosFromString(String _resregexpos) {
         this.resRegexPos = Integer.parseInt(_resregexpos);
     }
 
-    public int getTypeInt() {
+    private int getTypeInt() {
         return valparttype & C_VTYPE;
+    }
+
+    public int getTypeIntExported() {
+        return getTypeInt();
     }
 
     public void setTypeInt(int t) {
@@ -709,7 +725,11 @@ public final class AppValue {
         return _valparttype;
     }
 
-    public boolean setValPart(String _valtype) {
+    public boolean setValPartExported(String _valtype) {
+        return setValPart(_valtype);
+    }
+
+    private boolean setValPart(String _valtype) {
         boolean noerror = false;
         valparttype = parseValPartType(_valtype);
         //
@@ -730,12 +750,20 @@ public final class AppValue {
         return noerror;
     }
 
-    void setNoCount() {
+    private void setNoCount() {
         valparttype = valparttype | C_NOCOUNT;
     }
 
-    public void clearNoCount() {
+    public void setNoCountExported() {
+        setNoCount();
+    }
+
+    private void clearNoCount() {
         valparttype = valparttype & ~C_NOCOUNT;
+    }
+
+    public void clearNoCountExported() {
+        clearNoCount();
     }
 
     public boolean isNoCount() {
@@ -757,7 +785,7 @@ public final class AppValue {
         return noerror;
     }
 
-    void setVal(String _value) {
+    private void setVal(String _value) {
         valueregex = null;
         value = _value;
         if (value != null) {

@@ -53,7 +53,7 @@ public class MyFirstScannerHook implements ScannerHook {
             this.startedcon.addCustomActiveScanPmtParamsByScanner(
                     arg2, pmtParamsForCustomActiveScan);
         } else {
-            LOGGER4J.error("pmtParamsForCustomActiveScan is null");
+            LOGGER4J.debug("pmtParamsForCustomActiveScan is null");
         }
         LOGGER4J.debug("MyFirstScannerHook afterScan Called. URL[" + getURL(arg0) + "]");
     }
@@ -67,7 +67,7 @@ public class MyFirstScannerHook implements ScannerHook {
         if (this.startedcon.isStartedActiveScan(
                 arg2)) { // only call following methods when Scanner.start(Target) is
             // called by ExtensionActiveScanWrapper
-            LOGGER4J.info("same scanId:" + arg2.getId());
+            LOGGER4J.debug("same scanId:" + arg2.getId());
             HostProcess hpros = arg1.getParent();
             // always disable followRedirects.
             hpros.getHttpSender().setMaxRedirects(0);

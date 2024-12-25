@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Level;
  *
  * @author gdgd009xcd
  */
-public final class OneThreadProcessor {
+public class OneThreadProcessor {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     final Level DEBUGPROCESS = Level.getLevel("DEBUGPROCESS");
@@ -41,15 +41,16 @@ public final class OneThreadProcessor {
     private Object optdata = null;
 
     /**
-     * Newly create doaction.
-     *
-     * <p>it call void startAction(ThreadManager tm, OneThreadProcessor otp)
+     * Newly create doaction.<br>
+     * this constructor is package-private.<br>
+     * this means that this class can be instantiated only in this package.<br>
+     * this calls void startAction(ThreadManager tm, OneThreadProcessor otp)
      *
      * @param tm
      * @param th
      * @param provider
      */
-    public OneThreadProcessor(ThreadManager tm, Thread th, InterfaceDoActionProvider provider) {
+    OneThreadProcessor(ThreadManager tm, Thread th, InterfaceDoActionProvider provider) {
         this.doaction = provider.getDoActionInstance();
         this.seqno = provider.getSequnceNo();
         this.th = th;

@@ -143,7 +143,7 @@ public class JTextPaneContents {
         tcompo.setStyledDocument(blank);
 
 
-        StyledDocumentWithChunk requestdoc = new StyledDocumentWithChunk(prequest, true);
+        StyledDocumentWithChunk requestdoc = StyledDocumentWithChunk.newInstance(prequest, true);
         StyledDocument doc = requestdoc;
         tcompo.setStyledDocument(doc);
     }
@@ -159,7 +159,7 @@ public class JTextPaneContents {
         tcompo.setStyledDocument(blank);
 
 
-        StyledDocumentWithChunk requestdoc = new StyledDocumentWithChunk(prequest, false);
+        StyledDocumentWithChunk requestdoc = StyledDocumentWithChunk.newInstance(prequest, false);
         StyledDocument doc = requestdoc;
         tcompo.setStyledDocument(doc);
     }
@@ -167,9 +167,9 @@ public class JTextPaneContents {
     /**
      * Set Response data through Chunks for binary large data
      *
-     * @param presponse
+     * @param pResponse
      */
-    public void setResponseChunks(PResponse presponse) {
+    public void setResponseChunks(PResponse pResponse) {
         if (tcompo == null) return;
         StyledDocument blank = new DefaultStyledDocument();
 
@@ -178,7 +178,7 @@ public class JTextPaneContents {
         // Thus you must get original Document from JEditorPane for Setting Text.
         tcompo.setStyledDocument(blank);
 
-        StyledDocumentWithChunk responsedoc = new StyledDocumentWithChunk(presponse);
+        StyledDocumentWithChunk responsedoc = StyledDocumentWithChunk.newInstance(pResponse);
         StyledDocument doc = responsedoc;
 
         tcompo.setStyledDocument(doc);

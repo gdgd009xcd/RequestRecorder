@@ -9,7 +9,7 @@ import java.io.IOException;
 //
 // ByteArray
 //
-public final class ParmGenBinUtil {
+public class ParmGenBinUtil {
 
     private ByteArrayOutputStream bstream = null;
 
@@ -21,9 +21,13 @@ public final class ParmGenBinUtil {
         initParmGenBinUtil(bin);
     }
 
-    public void initParmGenBinUtil(byte[] bin) {
+    private void initParmGenBinUtil(byte[] bin) {
         bstream = new ByteArrayOutputStream();
-        concat(bin);
+        concatInternal(bin);
+    }
+
+    public void initParmGenBinUtilExported(byte[] bin) {
+        initParmGenBinUtil(bin);
     }
 
     public int length() {
@@ -36,7 +40,7 @@ public final class ParmGenBinUtil {
      * @param bin
      * @return
      */
-    public boolean concat(byte[] bin) {
+    private boolean concatInternal(byte[] bin) {
 
         if ((bin == null)) {
             return false;
@@ -49,6 +53,10 @@ public final class ParmGenBinUtil {
             return false;
         }
         return true;
+    }
+
+    public boolean concat(byte[] bin) {
+        return concatInternal(bin);
     }
 
     public byte[] getBytes() {

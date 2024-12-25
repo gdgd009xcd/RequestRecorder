@@ -421,7 +421,7 @@ public class AppParmsIni {
             int plast = parmlist.size() - 1;
             if (plast >= 0) {
                 AppValue av = parmlist.get(plast);
-                av.clearNoCount();
+                av.clearNoCountExported();
                 parmlist.set(plast, av);
             }
         }

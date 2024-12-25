@@ -222,7 +222,8 @@ public class PopUpItemActiveScan extends JMenuItem {
 
             List<CustomScanPanel> scanPanelList = new ArrayList<>();
 
-            CustomVectorInserter customVectorInserter = new CustomVectorInserter(target, extension);
+            CustomVectorInserter customVectorInserter =
+                    CustomVectorInserter.newInstance(target, extension);
             scanPanelList.add(customVectorInserter);
 
             List<String> tabList = new ArrayList<>();

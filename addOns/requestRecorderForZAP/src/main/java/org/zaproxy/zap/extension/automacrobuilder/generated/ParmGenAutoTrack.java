@@ -19,21 +19,46 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenAutoTrack extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin{
+public class ParmGenAutoTrack extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin{
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
     ParmGenNew parentwin;
     boolean valueexistonly = false;
 
     /**
-     * Creates new form ParmGenAutoTrack
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param _pwin
      */
-    public ParmGenAutoTrack(ParmGenNew _pwin) {
+    protected ParmGenAutoTrack(ParmGenNew _pwin) {
+        super();
+    }
+
+    /**
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param _pwin
+     * @return this
+     */
+    public static ParmGenAutoTrack newInstance(ParmGenNew _pwin) {
+        return new ParmGenAutoTrack(_pwin).buildThis(_pwin);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     * In extended class, you must call parent class's buildThis() method in your buildThis() method.
+     *
+     * @param _pwin
+     * @return this
+     */
+    protected ParmGenAutoTrack buildThis(ParmGenNew _pwin) {
         parentwin = _pwin;//parent window
         // initComponents();
         customInitComponents();
-
-
+        return this;
     }
 
     /**
@@ -187,12 +212,12 @@ public final class ParmGenAutoTrack extends javax.swing.JFrame implements Interf
             }
         }
         dispose();
-        new SelectRequest(bundle.getString("ParmGenAutoTrack.SelectRequest.text"), parentwin, new ParmGenAddParms(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
+        SelectRequest.newInstance(bundle.getString("ParmGenAutoTrack.SelectRequest.text"), parentwin, ParmGenAddParms.newInstance(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
     }//GEN-LAST:event_NextBtnActionPerformed
 
     private void RegexBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RegexBtnActionPerformed
         // TODO add your handling code here:
-        ResponseTracker rtrack = new ResponseTracker(parentwin);
+        ResponseTracker rtrack = ResponseTracker.newInstance(parentwin);
         rtrack.update();
         dispose();
         rtrack.setVisible(true);

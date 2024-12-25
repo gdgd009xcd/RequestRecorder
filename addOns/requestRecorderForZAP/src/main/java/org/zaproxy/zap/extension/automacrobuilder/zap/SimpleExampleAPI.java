@@ -27,7 +27,7 @@ import org.zaproxy.zap.extension.api.ApiImplementor;
 import org.zaproxy.zap.extension.api.ApiResponse;
 import org.zaproxy.zap.extension.api.ApiResponseElement;
 
-public final class SimpleExampleAPI extends ApiImplementor {
+public class SimpleExampleAPI extends ApiImplementor {
     private static final String PREFIX = "simpleExample";
 
     private ExtensionAutoMacroBuilder extension;
@@ -36,9 +36,18 @@ public final class SimpleExampleAPI extends ApiImplementor {
 
     private static final Logger LOGGER = Logger.getLogger(SimpleExampleAPI.class);
 
-    public SimpleExampleAPI(ExtensionAutoMacroBuilder extension) {
+    public static SimpleExampleAPI newInstance(ExtensionAutoMacroBuilder extension) {
+        return new SimpleExampleAPI(extension).buildThis(extension);
+    }
+
+    protected SimpleExampleAPI buildThis(ExtensionAutoMacroBuilder extension) {
         this.extension = extension;
         this.addApiAction(new ApiAction(ACTION_HELLO_WORLD));
+        return this;
+    }
+
+    protected SimpleExampleAPI(ExtensionAutoMacroBuilder extension) {
+        super();
     }
 
     @Override

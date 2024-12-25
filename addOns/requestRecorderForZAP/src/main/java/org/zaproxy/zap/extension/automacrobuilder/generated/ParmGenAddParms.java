@@ -4,14 +4,11 @@
  */
 package org.zaproxy.zap.extension.automacrobuilder.generated;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
@@ -26,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenAddParms extends javax.swing.JDialog implements interfaceParmGenWin {
+public class ParmGenAddParms extends javax.swing.JDialog implements interfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     ParmGenNew parentwin;// parenrt window which create this dialog.
@@ -50,9 +47,46 @@ public final class ParmGenAddParms extends javax.swing.JDialog implements interf
 
 
     /**
-     * Creates new form ParmGenAddParms
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param _parentwin
+     * @param _replaceEntireValue
+     * @return
      */
-    public ParmGenAddParms(ParmGenNew _parentwin,  boolean _replaceEntireValue) {
+    public static ParmGenAddParms newInstance(ParmGenNew _parentwin,  boolean _replaceEntireValue) {
+        return new ParmGenAddParms(_parentwin, _replaceEntireValue).buildThis(_parentwin, _replaceEntireValue);
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param _parentwin
+     * @param _replaceEntireValue
+     */
+    protected ParmGenAddParms(ParmGenNew _parentwin,  boolean _replaceEntireValue) {
+        super();
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     * In extended class, you must call parent class's buildThis() method.<br>
+     * e.g.:<br>
+     * <pre>
+     *     &#64;Override
+     *     protected ChildObject buildThis(ParmGenNew _parentwin, boolean _replaceEntireValue) {
+     *         super.buildThis(_parentwin, _replaceEntireValue);
+     *         ... arbitary code...
+     *         return this;
+     *     }
+     * </pre>
+     * @param _parentwin
+     * @param _replaceEntireValue
+     * @return this
+     */
+    protected ParmGenAddParms buildThis(ParmGenNew _parentwin, boolean _replaceEntireValue) {
         parentwin = _parentwin;
         isformdata = false;
         replaceEntireValue = _replaceEntireValue;
@@ -70,8 +104,7 @@ public final class ParmGenAddParms extends javax.swing.JDialog implements interf
 
         this.setModal(true);
         update();
-
-
+        return this;
     }
 
     private void deleteRows(){
