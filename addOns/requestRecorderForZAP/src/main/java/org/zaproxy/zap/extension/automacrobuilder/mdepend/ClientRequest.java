@@ -170,7 +170,7 @@ public class ClientRequest implements InterfaceClientRequest {
      * @param currentmessage
      */
     public void postZapCurrentResponse(ParmGenMacroTrace pmt, HttpMessage currentmessage) {
-        LOGGER4J.info(
+        LOGGER4J.debug(
                 "STEP["
                         + pmt.getStepNo()
                         + "] current send URL:"

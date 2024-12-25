@@ -25,7 +25,7 @@ import javax.swing.*;
 import java.awt.*;
 
 @SuppressWarnings("serial")
-public final class PopUpMenuItem extends PopupMenuItemHttpMessageContainer {
+public class PopUpMenuItem extends PopupMenuItemHttpMessageContainer {
 
     private final static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -40,9 +40,36 @@ public final class PopUpMenuItem extends PopupMenuItemHttpMessageContainer {
     private ExtensionHistory extensionHistory = null;
     StartedActiveScanContainer acon = null;
 
-    public PopUpMenuItem(MacroBuilderUI mbui, StartedActiveScanContainer acon,String packageName,
-                         String label, Icon icon) {
-        super(label);
+    /**
+     * create new instance of PopUpMenuItem
+     * you must define this in your extended classes for creating instance of your class
+     *
+     * @param mbui
+     * @param acon
+     * @param packageName
+     * @param label
+     * @param icon
+     * @return PopUpMenuItem instance
+     */
+    public static PopUpMenuItem newInstance(MacroBuilderUI mbui, StartedActiveScanContainer acon,String packageName,
+                                            String label, Icon icon) {
+        return new PopUpMenuItem(mbui, acon,packageName, label, icon).buildThis(mbui, acon,packageName, label, icon);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * see newInstance() method.<br>
+     * In extended class, you must call super.buildThis() in your buildThis method.
+     *
+     * @param mbui
+     * @param acon
+     * @param packageName
+     * @param label
+     * @param icon
+     * @return this instance
+     */
+    protected PopUpMenuItem buildThis(MacroBuilderUI mbui, StartedActiveScanContainer acon,String packageName,
+                                      String label, Icon icon) {
         this.packageName = packageName;
         this.mbui = mbui;
         this.acon = acon;
@@ -52,6 +79,22 @@ public final class PopUpMenuItem extends PopupMenuItemHttpMessageContainer {
             setIcon(icon);
         }
         setMenuIndex(1);
+        return this;
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param mbui
+     * @param acon
+     * @param packageName
+     * @param label
+     * @param icon
+     */
+    protected PopUpMenuItem(MacroBuilderUI mbui, StartedActiveScanContainer acon,String packageName,
+                         String label, Icon icon) {
+        super(label);
     }
 
     @Override

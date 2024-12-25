@@ -23,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.mdepend.ClientDependent;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class CustomTrackingParamterConfigMain extends javax.swing.JDialog {
+public class CustomTrackingParamterConfigMain extends JDialog {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
@@ -67,8 +67,15 @@ public final class CustomTrackingParamterConfigMain extends javax.swing.JDialog 
 
     /**
      * Creates new form CustomTrackingParamterConfigMain
+     * this constructor is package-private.<br>
+     * this means that this class can be instantiated only in this package.
+     *
+     * @param component
+     * @param modal
+     * @param _pmt
+     * @param gson
      */
-    public CustomTrackingParamterConfigMain(Component component, ModalityType modal, ParmGenMacroTrace _pmt, ParmGenGSONSaveV2 gson) {
+    CustomTrackingParamterConfigMain(Component component, ModalityType modal, ParmGenMacroTrace _pmt, ParmGenGSONSaveV2 gson) {
         super(SwingUtilities.windowForComponent(component), bundle.getString("CustomTrackingParamterConfigMain.DialogTitle.text"), modal);
         pmt = _pmt;
         ParmGenNew_Modified = false;
@@ -242,12 +249,12 @@ public final class CustomTrackingParamterConfigMain extends javax.swing.JDialog 
             current_row = rowsSelected[0];
             rec = pmt.getAppParmsIni(current_row);
         }
-        new ParmGenNew(this, rec).setVisible(true);
+        ParmGenNew.newInstance(this, rec).setVisible(true);
     }//GEN-LAST:event_ModActionPerformed
 
     private void AddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddActionPerformed
         // TODO add your handling code here:
-        new ParmGenNew(this, null).setVisible(true);
+        ParmGenNew.newInstance(this, null).setVisible(true);
     }//GEN-LAST:event_AddActionPerformed
 
     private void CancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelActionPerformed

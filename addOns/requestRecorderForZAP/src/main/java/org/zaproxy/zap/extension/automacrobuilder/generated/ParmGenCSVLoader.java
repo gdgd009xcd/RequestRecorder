@@ -19,23 +19,52 @@ import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenCSVLoader extends javax.swing.JFrame {
+public class ParmGenCSVLoader extends javax.swing.JFrame {
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
     String csvfile;
     FileReadLine frn;
     DefaultTableModel model;
     interfaceParmGenWin parentwin;
-    
+
     /**
-     * Creates new form ParmGenCSVLoader
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param _parent
+     * @param _csvfile
+     * @return this
      */
-    public ParmGenCSVLoader(interfaceParmGenWin _parent, String _csvfile) {
+    public static ParmGenCSVLoader newInstance(interfaceParmGenWin _parent, String _csvfile) {
+        return new ParmGenCSVLoader(_parent, _csvfile).buildThis(_parent, _csvfile);
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param _parent
+     * @param _csvfile
+     */
+    protected ParmGenCSVLoader(interfaceParmGenWin _parent, String _csvfile) {
+        super();
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     * In extended class, you must call parent class's buildThis() method in your buildThis() method.
+     *
+     * @param _parent
+     * @param _csvfile
+     * @return this
+     */
+    protected final ParmGenCSVLoader buildThis(interfaceParmGenWin _parent, String _csvfile) {
         parentwin = _parent;
         initComponents();
         model = (DefaultTableModel)ColumnTable.getModel();
         csvfile = _csvfile;
         frn= new FileReadLine(csvfile, false);
-        
+        return this;
     }
 
     public boolean  readOneLine(){
@@ -174,7 +203,7 @@ public final class ParmGenCSVLoader extends javax.swing.JFrame {
                 EnvironmentVariables.session.put(i, ParmGenSession.K_COLUMN, Integer.toString(colpos));
             }
             dispose();
-            new ParmGenAddParms((ParmGenNew)parentwin, true).setVisible(true);
+            ParmGenAddParms.newInstance((ParmGenNew)parentwin, true).setVisible(true);
         }
     }//GEN-LAST:event_CSelectActionPerformed
 

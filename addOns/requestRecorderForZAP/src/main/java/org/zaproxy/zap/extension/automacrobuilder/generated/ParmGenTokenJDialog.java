@@ -23,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenTokenJDialog extends javax.swing.JDialog {
+public class ParmGenTokenJDialog extends javax.swing.JDialog {
 
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -38,16 +38,50 @@ public final class ParmGenTokenJDialog extends javax.swing.JDialog {
     private String choosedFileName = null;
 
     /**
-     * Creates new form ParmGenTokenJDialog
+     * create new instance<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param mbui
+     * @param choosedFileName
+     * @param pmtProvider
+     * @param modal
+     * @param newPRequestResponseList
+     * @param _newparms
+     * @param _pmt
+     * @return this
      */
-    public ParmGenTokenJDialog(MacroBuilderUI mbui,
-                               String choosedFileName,
-                               ParmGenMacroTraceProvider pmtProvider,
-                               ModalityType modal,
-                               List<PRequestResponse> newPRequestResponseList,
-                               List<AppParmsIni> _newparms,
-                               ParmGenMacroTrace _pmt) {
-        super(SwingUtilities.windowForComponent(mbui), bundle.getString("ParmGenTokenJDialog.DialogTitle.text"), modal);
+    public static ParmGenTokenJDialog newInstance(MacroBuilderUI mbui,
+                                                  String choosedFileName,
+                                                  ParmGenMacroTraceProvider pmtProvider,
+                                                  ModalityType modal,
+                                                  List<PRequestResponse> newPRequestResponseList,
+                                                  List<AppParmsIni> _newparms,
+                                                  ParmGenMacroTrace _pmt) {
+        return new ParmGenTokenJDialog(mbui, choosedFileName, pmtProvider, modal, newPRequestResponseList, _newparms, _pmt)
+                .buildThis(mbui, choosedFileName, pmtProvider, modal, newPRequestResponseList, _newparms, _pmt);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.<br>
+     * In extended class, you must call super.buildThis() in your overridden buildThis() method.
+     *
+     * @param mbui
+     * @param choosedFileName
+     * @param pmtProvider
+     * @param modal
+     * @param newPRequestResponseList
+     * @param _newparms
+     * @param _pmt
+     * @return
+     */
+    protected ParmGenTokenJDialog buildThis(MacroBuilderUI mbui,
+                                            String choosedFileName,
+                                            ParmGenMacroTraceProvider pmtProvider,
+                                            ModalityType modal,
+                                            List<PRequestResponse> newPRequestResponseList,
+                                            List<AppParmsIni> _newparms,
+                                            ParmGenMacroTrace _pmt) {
         this.mbui = mbui;
         this.choosedFileName = choosedFileName;
         this.pmtProvider = pmtProvider;
@@ -67,13 +101,13 @@ public final class ParmGenTokenJDialog extends javax.swing.JDialog {
                 map.put(tkey, tval);
             }
         }
-        
+
         // clear table contents
         DefaultTableModel model = (DefaultTableModel)trackTkTable.getModel();
         while(model.getRowCount()>0){//delete all table rows
             model.removeRow(0);
         }
-        
+
         for(Map.Entry<ParmGenTokenKey, ParmGenTokenValue> entry : map.entrySet()) {
             tkey = entry.getKey();
             tval = entry.getValue();
@@ -84,6 +118,29 @@ public final class ParmGenTokenJDialog extends javax.swing.JDialog {
 
         pack();
         setLocationRelativeTo(getOwner());
+        return this;
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * Use newInstance() method instead.
+     *
+     * @param mbui
+     * @param choosedFileName
+     * @param pmtProvider
+     * @param modal
+     * @param newPRequestResponseList
+     * @param _newparms
+     * @param _pmt
+     */
+    protected ParmGenTokenJDialog(MacroBuilderUI mbui,
+                               String choosedFileName,
+                               ParmGenMacroTraceProvider pmtProvider,
+                               ModalityType modal,
+                               List<PRequestResponse> newPRequestResponseList,
+                               List<AppParmsIni> _newparms,
+                               ParmGenMacroTrace _pmt) {
+        super(SwingUtilities.windowForComponent(mbui), bundle.getString("ParmGenTokenJDialog.DialogTitle.text"), modal);
     }
 
     /**
@@ -265,7 +322,7 @@ public final class ParmGenTokenJDialog extends javax.swing.JDialog {
                         if(map.containsKey(_tkey)){
                             ParmGenTokenValue _tval = map.get(_tkey);
                             if(_tval.getBoolean()){
-                                ap.setEnabled(_tval.getBoolean());
+                                ap.setEnabledExported(_tval.getBoolean());
                                 apvit.set(ap);
                             }else{
                                 apvit.remove();

@@ -53,7 +53,7 @@ import static org.zaproxy.zap.extension.automacrobuilder.ListDeepCopy.listDeepCo
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class MacroBuilderUI  extends javax.swing.JPanel implements  InterfaceParmGenRegexSaveCancelAction {
+public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParmGenRegexSaveCancelAction {
 
     
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
@@ -88,10 +88,38 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
     ExtensionAutoMacroBuilder extensionAutoMacroBuilder = null;
 
     /**
-     * Creates new form MacroBuilderUI
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param pmtProvider
+     * @param extensionAutoMacroBuilder
+     * @return
+     */
+    public static MacroBuilderUI newInstance(ParmGenMacroTraceProvider pmtProvider, ExtensionAutoMacroBuilder extensionAutoMacroBuilder) {
+        return new MacroBuilderUI(pmtProvider, extensionAutoMacroBuilder).buildThis(pmtProvider, extensionAutoMacroBuilder);
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param pmtProvider
+     * @param extensionAutoMacroBuilder
      */
     @SuppressWarnings("unchecked")
-    public MacroBuilderUI(ParmGenMacroTraceProvider pmtProvider, ExtensionAutoMacroBuilder extensionAutoMacroBuilder) {
+    protected MacroBuilderUI(ParmGenMacroTraceProvider pmtProvider, ExtensionAutoMacroBuilder extensionAutoMacroBuilder) {
+        super();
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     *
+     * @param pmtProvider
+     * @param extensionAutoMacroBuilder
+     * @return this
+     */
+    protected MacroBuilderUI buildThis(ParmGenMacroTraceProvider pmtProvider, ExtensionAutoMacroBuilder extensionAutoMacroBuilder) {
         this.extensionAutoMacroBuilder = extensionAutoMacroBuilder;
         maxTabIndex = 0;
         this.MacroRequestListTabsCurrentIndex = 0;
@@ -135,7 +163,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
 
         // waittimer setting.
         WaitTimerCheckBoxActionPerformed(null);
-
+        return this;
     }
 
     public javax.swing.JPopupMenu getPopupMenuForRequestList(){
@@ -1574,8 +1602,8 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
                                     break;
                             }
 
-                            apv.setValPart(valtype);
-                            apv.clearNoCount();
+                            apv.setValPartExported(valtype);
+                            apv.clearNoCountExported();
                             apv.setCsvpos(-1);
                             // (?:[&=?]+|^)token=(value)
 
@@ -1639,7 +1667,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
                             }
                             apv.setURLencodedVal(encodedregex);
                             //apv.setresURL(".*" + restoken.request.getPath() + ".*");
-                            apv.setresURL(".*");//TrackFrom any URL
+                            apv.setResURLExported(".*");//TrackFrom any URL
                             apv.setresRegexURLencoded("");
                             int resvalpart = AppValue.V_AUTOTRACKBODY;
                             switch (_RToken.getTokenKey().getTokenType()) {
@@ -1652,7 +1680,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
                                     break;
 
                             }
-                            apv.setresPartType(apv.getValPart(resvalpart));
+                            apv.setResPartTypeExported(apv.getValPart(resvalpart));
                             apv.setResRegexPos(_RToken.getTokenKey().getFcnt());
                             apv.setToken(token);
 
@@ -1661,7 +1689,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
 
                             apv.setToStepNo(EnvironmentVariables.TOSTEPANY);
                             apv.setTokenType(_RToken.getTokenKey().getTokenType());
-                            apv.setEnabled(_RToken.isEnabled());
+                            apv.setEnabledExported(_RToken.isEnabled());
                             aparms.addAppValue(apv);
                         }
                         //aparms.setRow(row);
@@ -1759,7 +1787,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
             }
 
             LOGGER4J.debug("newparms.size=" + newparms.size());
-            new ParmGenTokenJDialog(this,
+            ParmGenTokenJDialog.newInstance(this,
                     choosedFileName,
                     pmtProvider,
                     Dialog.ModalityType.DOCUMENT_MODAL,
@@ -1860,8 +1888,8 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
             if (pqr != null) {
                 StyledDocumentWithChunk chunkdoc = this.getStyledDocumentOfSelectedMessageRequest();
                 if (chunkdoc != null) {
-                    StyledDocumentWithChunk newchunkdoc = new StyledDocumentWithChunk(chunkdoc); // newchunkdoc is newly created and independent from chunkdoc.
-                    new ParmGenRegex(bundle.getString("MacroBuilderUI.requestEditorTitle.text"),this, reg, newchunkdoc).setVisible(true);
+                    StyledDocumentWithChunk newchunkdoc = StyledDocumentWithChunk.newInstance(chunkdoc); // newchunkdoc is newly created and independent from chunkdoc.
+                    ParmGenRegex.newInstance(bundle.getString("MacroBuilderUI.requestEditorTitle.text"),this, reg, newchunkdoc).setVisible(true);
                 }
             }
         }
@@ -1880,8 +1908,8 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
             if (pos != -1) {
                 StyledDocument doc = messageResponse.getStyledDocument();
                 if (doc instanceof StyledDocumentWithChunk) {
-                    StyledDocumentWithChunk newchunkdoc = new StyledDocumentWithChunk((StyledDocumentWithChunk) doc);
-                    new ParmGenRegex("Response", this, reg, newchunkdoc).setVisible(true);
+                    StyledDocumentWithChunk newchunkdoc = StyledDocumentWithChunk.newInstance((StyledDocumentWithChunk) doc);
+                    ParmGenRegex.newInstance("Response", this, reg, newchunkdoc).setVisible(true);
                 }
             }
         }
@@ -2304,7 +2332,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
                 if (changedDoc != null) {
                     if (changedDoc.isRequest()) {
                         // update only the StyledDocument in messageRequest
-                        StyledDocumentWithChunk updatedDoc = new StyledDocumentWithChunk(changedDoc);
+                        StyledDocumentWithChunk updatedDoc = StyledDocumentWithChunk.newInstance(changedDoc);
                         messageRequest.setStyledDocument((StyledDocument) updatedDoc);
                         pmt.nullfetchResValAndCookieMan();
                     }
@@ -2623,7 +2651,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
      * @return
      */
     private JPanel createCloseXbtnForTabbedPane(String tabTitle, int maxTabIndex) {
-        CloseXbtnTabPanel tabPanel = new CloseXbtnTabPanel(tabTitle,
+        CloseXbtnTabPanel tabPanel = CloseXbtnTabPanel.newInstance(tabTitle,
                 new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
                         LOGGER4J.debug("Enter closeXbtnActionPerfomed");
@@ -2701,7 +2729,7 @@ public final class MacroBuilderUI  extends javax.swing.JPanel implements  Interf
             Encode enc = doc.getEnc();
             if (selectedText.indexOf("\n") == -1) {
                 StartEndPosition startEndPosition = new StartEndPosition(startPos, endPos, selectedText);
-                DecoderSelector decoderSelector = new DecoderSelector(this, startEndPosition, enc);
+                DecoderSelector decoderSelector = DecoderSelector.newInstance(this, startEndPosition, enc);
                 decoderSelector.setVisible(true);
             }
 

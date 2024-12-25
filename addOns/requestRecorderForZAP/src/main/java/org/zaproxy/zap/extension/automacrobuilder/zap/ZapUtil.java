@@ -499,7 +499,7 @@ public class ZapUtil {
         String bodyCharsetString = requestBody.getCharset();
         Encode enc = Encode.getEnum(bodyCharsetString);
         PRequest decodedPRequest = getPRequest(decodedHttpMessage, enc);
-        StyledDocumentWithChunk doc = new StyledDocumentWithChunk();
+        StyledDocumentWithChunk doc = StyledDocumentWithChunk.newInstance();
         PRequest originalEncodedPRequest = doc.getOriginalEncodedPRequest(decodedPRequest);
         HttpMessage encodedHttpMessage = getHttpMessageFromPRequest(originalEncodedPRequest);
 

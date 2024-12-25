@@ -22,57 +22,84 @@ import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class SelectRequest extends javax.swing.JDialog {
+public class SelectRequest extends javax.swing.JDialog {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
-       DefaultTableModel model;
-       interfaceParmGenWin pgenwin;
-       ArrayList<PRequestResponse> P_proxy_messages;
-       int selected_message_idx;
-       int panelno;
-       interfaceParmGenWin nextwin;
-       
-    /**
-     * Creates new form SelectRequest
-     */
-    public SelectRequest(String title, interfaceParmGenWin _pgenwin, interfaceParmGenWin _nextwin, int _panelno) {
-        pgenwin = _pgenwin;
-        panelno = _panelno;
-        nextwin = _nextwin;
-        setRequest(ParmGenGSONSaveV2.proxy_messages);
-        initComponents();
-        setTitle(title);
-        TableColumn col ;
-        int[] colsize = {
-            60, 250, 60
-        };
-        for(int i=0; i<3; i++){
-            col= RequestTable.getColumnModel().getColumn(i);
-            col.setPreferredWidth(colsize[i]);
-        }
-        this.setModal(true);
-        switch(_panelno){
-            case ParmGenNew.P_RESPONSETAB:
-                selected_message_idx = 0;
-                break;
-            default:
-                int size = RequestTable.getRowCount();
-                if(size<=0){
-                    size = 0;
-                }else{
-                    size--;
-                }
-                selected_message_idx = size;
-                break;
-        }
-        RequestTable.setRowSelectionInterval(selected_message_idx, selected_message_idx);
-        SwingUtilities.invokeLater(() -> {
-            RequestTableMouseClicked(null);
-        });
-        
+   DefaultTableModel model;
+   interfaceParmGenWin pgenwin;
+   ArrayList<PRequestResponse> P_proxy_messages;
+   int selected_message_idx;
+   int panelno;
+   interfaceParmGenWin nextwin;
 
+    /**
+     * create new instance of SelectRequest<br>
+     * you must define this in your extended classes for instanciating of your class
+     *
+     * @param title
+     * @param _pgenwin
+     * @param _nextwin
+     * @param _panelno
+     * @return new instance of SelectRequest
+     */
+   public static SelectRequest newInstance(String title, interfaceParmGenWin _pgenwin, interfaceParmGenWin _nextwin, int _panelno) {
+       return new SelectRequest().buildThis(title, _pgenwin, _nextwin, _panelno);
+   }
+
+    /**
+     * build this instance.<br>
+     * you must define and call this method after instanciating of your class<br>
+     * See newInstance() method<br>
+     * In your extended class, you must call super.buildThis() method in your buildThis() method
+     *
+     * @param title
+     * @param _pgenwin
+     * @param _nextwin
+     * @param _panelno
+     * @return this
+     */
+   protected SelectRequest buildThis(String title, interfaceParmGenWin _pgenwin, interfaceParmGenWin _nextwin, int _panelno) {
+       pgenwin = _pgenwin;
+       panelno = _panelno;
+       nextwin = _nextwin;
+       setRequest(ParmGenGSONSaveV2.proxy_messages);
+       initComponents();
+       setTitle(title);
+       TableColumn col ;
+       int[] colsize = {
+               60, 250, 60
+       };
+       for(int i=0; i<3; i++){
+           col= RequestTable.getColumnModel().getColumn(i);
+           col.setPreferredWidth(colsize[i]);
+       }
+       this.setModal(true);
+       switch(_panelno){
+           case ParmGenNew.P_RESPONSETAB:
+               selected_message_idx = 0;
+               break;
+           default:
+               int size = RequestTable.getRowCount();
+               if(size<=0){
+                   size = 0;
+               }else{
+                   size--;
+               }
+               selected_message_idx = size;
+               break;
+       }
+       RequestTable.setRowSelectionInterval(selected_message_idx, selected_message_idx);
+       SwingUtilities.invokeLater(() -> {
+           RequestTableMouseClicked(null);
+       });
+
+       return this;
+   }
+
+    protected SelectRequest() {
+       super();
     }
 
     /**

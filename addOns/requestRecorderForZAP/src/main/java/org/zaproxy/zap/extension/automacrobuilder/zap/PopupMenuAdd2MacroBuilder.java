@@ -40,7 +40,7 @@ import org.zaproxy.zap.model.Target;
 import org.zaproxy.zap.view.popup.PopupMenuItemSiteNodeContainer;
 
 @SuppressWarnings("serial")
-public final class PopupMenuAdd2MacroBuilder extends PopupMenuItemSiteNodeContainer
+public class PopupMenuAdd2MacroBuilder extends PopupMenuItemSiteNodeContainer
         implements InterfaceLangOKNG {
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
@@ -53,15 +53,46 @@ public final class PopupMenuAdd2MacroBuilder extends PopupMenuItemSiteNodeContai
     private List<PRequestResponse> listprr = null;
     private List<HistoryReference> hrefs = null;
 
-    public PopupMenuAdd2MacroBuilder(MacroBuilderUI mbui, String label) {
-        super(label, true);
+    /**
+     * create new instance of PopupMenuAdd2MacroBuilder
+     *
+     * @param mbui
+     * @param label
+     * @return PopupMenuAdd2MacroBuilder instance
+     */
+    public static PopupMenuAdd2MacroBuilder newInstance(MacroBuilderUI mbui, String label) {
+        return new PopupMenuAdd2MacroBuilder(mbui, label).buildThis(mbui, label);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * see newInstance() method.<br>
+     * In extended class, you must call super. buildThis(mbui, label) in your buildThis method.
+     *
+     * @param mbui
+     * @param label
+     * @return
+     */
+    protected PopupMenuAdd2MacroBuilder buildThis(MacroBuilderUI mbui, String label) {
         this.pmt = null;
         this.mbui = mbui;
         setMenuIndex(1);
         setIcon(A_TAB_ICON);
         langdialog =
-                new LangSelectDialog(
+                LangSelectDialog.newInstance(
                         this.mbui, this, Encode.ISO_8859_1, Dialog.ModalityType.DOCUMENT_MODAL);
+        return this;
+    }
+
+    /**
+     * Do not use this constructor directly.<br>
+     * Use newInstance() instead.
+     *
+     * @param mbui
+     * @param label
+     */
+    protected PopupMenuAdd2MacroBuilder(MacroBuilderUI mbui, String label) {
+        super(label, true);
     }
 
     private String getIndentString(int i) {

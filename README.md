@@ -48,7 +48,7 @@ The add-on is built with [Gradle]: https://gradle.org/
 
 To download & build this addon, simply run:  
 
-    $ git clone https://github.com/gdgd009xcd/RequestRecorder.git  
+    $ git clone https://github.com/gdgd009xcd/RequestRecorder.git 
     $ cd RequestRecorder/  
     $ ./gradlew addOns:requestRecorderForZAP:jarZapAddOn  
 

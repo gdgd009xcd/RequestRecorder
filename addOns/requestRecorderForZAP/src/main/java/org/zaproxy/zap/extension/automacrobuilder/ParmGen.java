@@ -80,7 +80,7 @@ public class ParmGen {
         LOGGER4J.debug("method[" + method + "] request[" + url + "]");
         int qpos = -1;
         String[] nvcont = null;
-        switch (av.getTypeInt()) {
+        switch (av.getTypeIntExported()) {
                 // switch(av.valparttype & AppValue.C_VTYPE){
             case AppValue.V_PATH: // path
                 // path = url
@@ -212,13 +212,13 @@ public class ParmGen {
                                 LOGGER4J.trace(" Original body[" + content + "]");
                                 LOGGER4J.trace(" Modified body[" + n_content + "]");
                                 try {
-                                    _contarray.initParmGenBinUtil(
+                                    _contarray.initParmGenBinUtilExported(
                                             n_content.getBytes(
                                                     requestBodyEncode.getIANACharsetName()));
                                 } catch (UnsupportedEncodingException ex) {
                                     Logger.getLogger(ParmGen.class.getName())
                                             .log(Level.SEVERE, null, ex);
-                                    _contarray.initParmGenBinUtil(n_content.getBytes());
+                                    _contarray.initParmGenBinUtilExported(n_content.getBytes());
                                 }
                                 if (org_request != null
                                         && org_content_iso8859 != null
@@ -367,7 +367,7 @@ public class ParmGen {
 
                         if (partupdt) {
                             // _contarray = n_array;
-                            _contarray.initParmGenBinUtil(n_array.getBytes());
+                            _contarray.initParmGenBinUtilExported(n_array.getBytes());
                             if (org_content_isupdated) {
                                 if (org_request != null
                                         && org_content_iso8859 != null

@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 @SuppressWarnings("serial")
-public final class BoxAndScrollerPanel extends JPanel {
+public class BoxAndScrollerPanel extends JPanel {
     // create borderlayout for adding option input components in the future
     //  |-------------border layout PAGE_START--------------------|
     //  | |---------Box layout BoxLayout.Y_AXIS-----------------| |
@@ -20,14 +20,45 @@ public final class BoxAndScrollerPanel extends JPanel {
     private JPanel boxPanel;
     private JScrollPane scroller;
 
-    public BoxAndScrollerPanel() {
-        super();
-        initialize(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+    /**
+     * create new instance of BoxAndScrollerPanel with default scroll policy
+     * @return BoxAndScrollerPanel instance
+     */
+    public static BoxAndScrollerPanel newInstance() {
+        return new BoxAndScrollerPanel().buildThis(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
     }
 
-    public BoxAndScrollerPanel(int horizontalPolicy, int verticalPolicy) {
+    /**
+     * create new instance of BoxAndScrollerPanel with specified scroll policy
+     *
+     * @param horizontalPolicy
+     * @param verticalPolicy
+     * @return BoxAndScrollerPanel instance
+     */
+    public static BoxAndScrollerPanel newInstance(int horizontalPolicy, int verticalPolicy) {
+        return new BoxAndScrollerPanel().buildThis(horizontalPolicy, verticalPolicy);
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     */
+    protected BoxAndScrollerPanel() {
         super();
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.<br>
+     * In extended class, you must override this method and call super.buildThis(horizontalPolicy, verticalPolicy) in it.
+     *
+     * @param horizontalPolicy
+     * @param verticalPolicy
+     * @return this instance
+     */
+    protected BoxAndScrollerPanel buildThis(int horizontalPolicy, int verticalPolicy) {
         initialize(horizontalPolicy, verticalPolicy);
+        return this;
     }
 
     private void initialize(int horizontalPolicy, int verticalPolicy) {

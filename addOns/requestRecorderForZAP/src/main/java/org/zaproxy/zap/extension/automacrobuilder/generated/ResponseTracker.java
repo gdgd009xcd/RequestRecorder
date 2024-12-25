@@ -30,7 +30,7 @@ import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
 
@@ -55,11 +55,26 @@ public final class ResponseTracker extends javax.swing.JFrame implements Interfa
     String regexpattern;
     String respart;
     boolean isheader;
-    
+
     /**
-     * Creates new form ResponseTracker
+     * create new instance of ResponseTracker
+     *
+     * @param _pwin
+     * @return ResponseTracker
      */
-    public ResponseTracker(ParmGenNew _pwin) {
+    public static ResponseTracker newInstance(ParmGenNew _pwin){
+        return new ResponseTracker(_pwin).buildThis(_pwin);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstace() method.<br>
+     * In extended class, you must call super.buildThis in overridden buildThis method
+     *
+     * @param _pwin
+     * @return this
+     */
+    protected ResponseTracker buildThis(ParmGenNew _pwin){
         parentwin = _pwin;
         // initComponents();
         customInitComponents();
@@ -67,7 +82,17 @@ public final class ResponseTracker extends javax.swing.JFrame implements Interfa
         regexpattern = null;
         respart = "responsebody";
         isheader = false;
-        
+        return this;
+    }
+
+    /**
+     * Do not use this constructor directly.<br>
+     * use newInstance() instead.
+     *
+     * @param _pwin
+     */
+    protected ResponseTracker(ParmGenNew _pwin) {
+        super();
     }
     
     public String getRegex(){
@@ -648,7 +673,7 @@ public final class ResponseTracker extends javax.swing.JFrame implements Interfa
 
     private void RegexTextBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RegexTextBtnActionPerformed
         // TODO add your handling code here:
-        new ParmGenRegex(this, false).setVisible(true);
+        ParmGenRegex.newInstance(this, false).setVisible(true);
     }//GEN-LAST:event_RegexTextBtnActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -666,7 +691,7 @@ public final class ResponseTracker extends javax.swing.JFrame implements Interfa
         if(poscnt!=null){
             EnvironmentVariables.session.put(ParmGenSession.K_RESPONSEPOSITION, poscnt);
             dispose();
-            new SelectRequest(bundle.getString("ResponseTracker.SelectRequestTitle.text"), parentwin, new ParmGenAddParms(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
+            SelectRequest.newInstance(bundle.getString("ResponseTracker.SelectRequestTitle.text"), parentwin, ParmGenAddParms.newInstance(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
         }else{
             JOptionPane.showMessageDialog(this,"<HTML>正規表現に誤りがあります。</HTML>" ,  "正規表現エラー", JOptionPane.ERROR_MESSAGE);
         }

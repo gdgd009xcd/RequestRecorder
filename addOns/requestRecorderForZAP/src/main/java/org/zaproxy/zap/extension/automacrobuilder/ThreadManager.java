@@ -315,7 +315,7 @@ public class ThreadManager {
                         LOGGER4J.warn("endaction is null id:" + p.getid());
                     }
                 } else {
-                    LOGGER4J.warn(
+                    LOGGER4J.debug(
                             "skipped endaction because DoAction return false id:" + p.getid());
                 }
             } else {

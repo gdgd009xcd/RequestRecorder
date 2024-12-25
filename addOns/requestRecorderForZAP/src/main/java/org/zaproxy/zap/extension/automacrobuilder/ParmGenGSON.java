@@ -513,22 +513,22 @@ public class ParmGenGSON implements GsonParserListener {
                     default:
                         if (apv != null) { // v1
                             if (name.equalsIgnoreCase("VALPART")) {
-                                if (!apv.setValPart(GetString(ev, value, ""))) {
+                                if (!apv.setValPartExported(GetString(ev, value, ""))) {
                                     JSONSyntaxErrors.add("VALPART has no value:[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("ISMODIFY")) {
                                 if (Getboolean(ev, value, true) == false) {
-                                    apv.setEnabled(false);
+                                    apv.setEnabledExported(false);
                                 }
                             } else if (name.equalsIgnoreCase("ISENABLED")) {
                                 if (Getboolean(ev, value, true) == false) {
-                                    apv.setEnabled(false);
+                                    apv.setEnabledExported(false);
                                 }
                             } else if (name.equalsIgnoreCase("ISNOCOUNT")) {
                                 if (Getboolean(ev, value, true) == true) {
-                                    apv.setNoCount();
+                                    apv.setNoCountExported();
                                 } else {
-                                    apv.clearNoCount();
+                                    apv.clearNoCountExported();
                                 }
                             } else if (name.equalsIgnoreCase("CSVPOS")) {
                                 apv.setCsvpos(GetNumber(ev, value, 0));
@@ -537,11 +537,11 @@ public class ParmGenGSON implements GsonParserListener {
                                     JSONSyntaxErrors.add("Invalid VALUE :[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("RESURL")) {
-                                apv.setresURL(GetString(ev, value, ""));
+                                apv.setResURLExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEX")) {
                                 apv.setresRegexURLencoded(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESVALPART")) {
-                                apv.setresPartType(GetString(ev, value, ""));
+                                apv.setResPartTypeExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEXPOS")) {
                                 apv.setResRegexPos(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("TOKEN")) {
@@ -658,22 +658,22 @@ public class ParmGenGSON implements GsonParserListener {
                     default:
                         if (apv != null) { // v2
                             if (name.equalsIgnoreCase("VALPART")) {
-                                if (!apv.setValPart(GetString(ev, value, ""))) {
+                                if (!apv.setValPartExported(GetString(ev, value, ""))) {
                                     JSONSyntaxErrors.add("VALPART has no value:[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("ISMODIFY")) {
                                 if (Getboolean(ev, value, true) == false) {
-                                    apv.setEnabled(false);
+                                    apv.setEnabledExported(false);
                                 }
                             } else if (name.equalsIgnoreCase("ISENABLED")) {
                                 if (Getboolean(ev, value, true) == false) {
-                                    apv.setEnabled(false);
+                                    apv.setEnabledExported(false);
                                 }
                             } else if (name.equalsIgnoreCase("ISNOCOUNT")) {
                                 if (Getboolean(ev, value, true) == true) {
-                                    apv.setNoCount();
+                                    apv.setNoCountExported();
                                 } else {
-                                    apv.clearNoCount();
+                                    apv.clearNoCountExported();
                                 }
                             } else if (name.equalsIgnoreCase("CSVPOS")) {
                                 apv.setCsvpos(GetNumber(ev, value, 0));
@@ -682,11 +682,11 @@ public class ParmGenGSON implements GsonParserListener {
                                     JSONSyntaxErrors.add("Invalid VALUE :[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("RESURL")) {
-                                apv.setresURL(GetString(ev, value, ""));
+                                apv.setResURLExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEX")) {
                                 apv.setresRegexURLencoded(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESVALPART")) {
-                                apv.setresPartType(GetString(ev, value, ""));
+                                apv.setResPartTypeExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEXPOS")) {
                                 apv.setResRegexPos(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("TOKEN")) {

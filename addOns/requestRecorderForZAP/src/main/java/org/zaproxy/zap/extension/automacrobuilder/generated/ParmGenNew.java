@@ -7,14 +7,11 @@ package org.zaproxy.zap.extension.automacrobuilder.generated;
 import java.io.File;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyledDocument;
 
@@ -28,7 +25,7 @@ import org.zaproxy.zap.extension.automacrobuilder.zap.ZapUtil;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
     
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     
@@ -67,36 +64,41 @@ public final class ParmGenNew extends javax.swing.JFrame implements InterfaceReg
     };
 
     /**
-     * Creates new form ParmGenNew
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param _parentwin
+     * @param _rec
+     * @return this
      */
+    public static ParmGenNew newInstance(CustomTrackingParamterConfigMain _parentwin, AppParmsIni _rec) {
+        return new ParmGenNew(_parentwin, _rec).buildThis(_parentwin, _rec);
+    }
 
-
-
-
-    public ParmGenNew(CustomTrackingParamterConfigMain _parentwin, AppParmsIni _rec){
-
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     * In extended class, you must call parent class's buildThis() method in your buildThis() method.
+     *
+     * @param _parentwin
+     * @param _rec
+     * @return
+     */
+    protected ParmGenNew buildThis(CustomTrackingParamterConfigMain _parentwin, AppParmsIni _rec) {
         current_tablerowidx = 0;
-
         parentwin = _parentwin;
-
         LOGGER4J.debug("initComponents started");
         blockUnderInitComponents = true;
         initComponents();
         blockUnderInitComponents = false; // blocking behavior while running initComponents.
         LOGGER4J.debug("initComponents end.");
-        
         ParamTableModels[P_NUMBERMODEL] = (DefaultTableModel)nParamTable.getModel();
         ParamTableModels[P_CSVMODEL] = (DefaultTableModel)csvParamTable.getModel();
         ParamTableModels[P_TRACKMODEL] = (DefaultTableModel)trackTable.getModel();
-
         addJComboBoxToJTable();
-
-
         PRequestResponse mess = ParmGenGSONSaveV2.proxy_messages.get(0);
         String _url = mess.request.getURL();
-
         selected_requestURL.setText(_url);
-
         ZapUtil.SwingInvokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
@@ -108,12 +110,9 @@ public final class ParmGenNew extends javax.swing.JFrame implements InterfaceReg
                 }
             }
         });
-
         current_model = P_NUMBERMODEL;
-
         if(_rec!=null){
             rec = _rec;
-            //rec.setCntFileName();
             addrec = null;
             switch(rec.getTypeVal()){
                 case AppParmsIni.T_NUMBER:
@@ -129,13 +128,11 @@ public final class ParmGenNew extends javax.swing.JFrame implements InterfaceReg
                     current_model = P_RANDOMMODEL;
                     break;
             }
-            
             current_model_selected = true;
             CSVrewind.setSelected(false);
             NumberRewind.setSelected(false);
         }else{
             rec = new AppParmsIni();//add new record
-            //rec.setRow(parentwin.getRowSize());
             addrec = rec;
             CSVrewind.setSelected(true);
             NumberRewind.setSelected(true);
@@ -143,30 +140,32 @@ public final class ParmGenNew extends javax.swing.JFrame implements InterfaceReg
                 current_model = P_TRACKMODEL;
             }
         }
-
         setAppParmsIni();
-
-
         ResponseArea.setToolTipText(bundle.getString("ParmGenNew.ResponseAreaToolTip.text"));
-        
         if (current_model != P_TRACKMODEL) {
             TrackFromLabel.setEnabled(false);
             TrackFrom.setEnabled(false);
         }
-        // after deternimed current_model_selected must run these functions.
         ModelTabs.setSelectedIndex(current_model);
-
+        return this;
     }
 
-    public void setPatternFileName(String _name){
-
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param _parentwin
+     * @param _rec
+     */
+    protected ParmGenNew(CustomTrackingParamterConfigMain _parentwin, AppParmsIni _rec){
+        super();
     }
 
     public int getCurrentModel(){
         return current_model;
     }
 
-private void setAppParmsIni(){
+    private void setAppParmsIni(){
         Object[] row;
         int tfrom = rec.getTrackFromStep();
         int tto = rec.getSetToStep();
@@ -1455,7 +1454,7 @@ private void setAppParmsIni(){
         }
         // clea sessions
         EnvironmentVariables.session.clear();
-        ParmGenCSVLoader csvloader = new ParmGenCSVLoader(this,csvFilePath.getText());
+        ParmGenCSVLoader csvloader = ParmGenCSVLoader.newInstance(this,csvFilePath.getText());
         if(csvloader.readOneLine()){
             csvloader.setVisible(true);
         }else{
@@ -1480,7 +1479,7 @@ private void setAppParmsIni(){
         }
         // clear sessions
         EnvironmentVariables.session.clear();
-        new SelectRequest(bundle.getString("ParmGenNew.SelectResponseDialogTitle.text"), this, new ParmGenAutoTrack(this), ParmGenNew.P_RESPONSETAB).setVisible(true);
+        SelectRequest.newInstance(bundle.getString("ParmGenNew.SelectResponseDialogTitle.text"), this, ParmGenAutoTrack.newInstance(this), ParmGenNew.P_RESPONSETAB).setVisible(true);
     }//GEN-LAST:event_nParamAdd4ActionPerformed
 
     private void numberTargetURLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_numberTargetURLActionPerformed
@@ -1502,7 +1501,7 @@ private void setAppParmsIni(){
 
     private void RequestSelectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RequestSelectBtnActionPerformed
         // TODO add your handling code here:
-        new SelectRequest(bundle.getString("ParmGenNew.SelectRequestDialogTitle.text"), this, null, -1).setVisible(true);
+        SelectRequest.newInstance(bundle.getString("ParmGenNew.SelectRequestDialogTitle.text"), this, null, -1).setVisible(true);
     }//GEN-LAST:event_RequestSelectBtnActionPerformed
 
     private void SaveParmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParmActionPerformed
@@ -1673,7 +1672,7 @@ private void setAppParmsIni(){
         }
         //　clear session paramters
         EnvironmentVariables.session.clear();
-        new ParmGenAddParms(this, false).setVisible(true);
+        ParmGenAddParms.newInstance(this, false).setVisible(true);
     }//GEN-LAST:event_nParamAddActionPerformed
 
     private void NumberRegexTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NumberRegexTestActionPerformed
@@ -1687,7 +1686,7 @@ private void setAppParmsIni(){
         if (rowsSelected.length > 0){
             current_tablecolidx = 2;
             current_tablerowidx = rowsSelected[0];
-            new ParmGenRegex(this, true).setVisible(true);
+            ParmGenRegex.newInstance(this, true).setVisible(true);
         }
 
     }//GEN-LAST:event_NumberRegexTestActionPerformed
@@ -1854,7 +1853,7 @@ private void setAppParmsIni(){
                     showrequest = Boolean.parseBoolean(ParamTableModels[current_model].getValueAt(current_tablerowidx, 14).toString());
                 }
             }
-            new ParmGenRegex(this, showrequest).setVisible(true);
+            ParmGenRegex.newInstance(this, showrequest).setVisible(true);
         }
     }//GEN-LAST:event_RegexTestSelectedColumnActionPerformed
 
@@ -1919,7 +1918,7 @@ private void setAppParmsIni(){
         if (rowsSelected.length > 0){
             current_tablecolidx = 3;
             current_tablerowidx = rowsSelected[0];
-            new ParmGenRegex(this,  true).setVisible(true);
+            ParmGenRegex.newInstance(this,  true).setVisible(true);
         }
     }//GEN-LAST:event_csvParamRegexTestActionPerformed
 
@@ -1971,7 +1970,7 @@ private void setAppParmsIni(){
             current_tablerowidx = rowsSelected[0];
             current_tablecolidx = 12;
             showrequest = Boolean.parseBoolean(ParamTableModels[current_model].getValueAt(current_tablerowidx, 14).toString());
-            new ParmGenRegex(this, showrequest).setVisible(true);
+            ParmGenRegex.newInstance(this, showrequest).setVisible(true);
         }
     }//GEN-LAST:event_CondRegexActionPerformed
 
@@ -1995,7 +1994,7 @@ private void setAppParmsIni(){
             } else {
                 showrequest = true;
             }
-            new ParmGenRegex(this, showrequest).setVisible(true);
+            ParmGenRegex.newInstance(this, showrequest).setVisible(true);
         }
     }//GEN-LAST:event_FromValueRegexActionPerformed
 
@@ -2011,7 +2010,7 @@ private void setAppParmsIni(){
         boolean showrequest = true;
         if (rowsSelected.length > 0){
             current_tablerowidx = rowsSelected[0];current_tablecolidx = 2;
-            new ParmGenRegex(this, showrequest).setVisible(true);
+            ParmGenRegex.newInstance(this, showrequest).setVisible(true);
         }
     }//GEN-LAST:event_ParamRegexActionPerformed
 

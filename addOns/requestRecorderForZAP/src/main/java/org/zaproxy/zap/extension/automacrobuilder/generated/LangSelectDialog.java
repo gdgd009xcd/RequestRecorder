@@ -17,17 +17,51 @@ import org.zaproxy.zap.extension.automacrobuilder.InterfaceLangOKNG;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public final class LangSelectDialog extends javax.swing.JDialog {
+public class LangSelectDialog extends javax.swing.JDialog {
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
     MacroBuilderUI mbui = null;
     InterfaceLangOKNG LangOKNG = null;
     Encode selected_lang ;
+
     /**
-     * Creates new form LangSelectDialog
+     * new instance method<br>
+     * you must define this in your extended classes for instantiation
+     *
+     * @param mbui
+     * @param _lokng
+     * @param lang
+     * @param modal
+     * @return this
      */
-    public LangSelectDialog(MacroBuilderUI mbui, InterfaceLangOKNG _lokng, Encode lang, Dialog.ModalityType modal) {
+    public static LangSelectDialog newInstance(MacroBuilderUI mbui, InterfaceLangOKNG _lokng, Encode lang, Dialog.ModalityType modal) {
+        return new LangSelectDialog(mbui, _lokng, lang, modal).buildThis(mbui, _lokng, lang, modal);
+    }
+
+    /**
+     * Do not call this constructor directly for instantiating this class.<br>
+     * use newInstance() method instead.
+     *
+     * @param mbui
+     * @param _lokng
+     * @param lang
+     * @param modal
+     */
+    protected LangSelectDialog(MacroBuilderUI mbui, InterfaceLangOKNG _lokng, Encode lang, Dialog.ModalityType modal) {
         super(SwingUtilities.windowForComponent(mbui), bundle.getString("LangSelectDialog.Title.text"), modal);
+    }
+
+    /**
+     * you must call this method in newInstance method after creating this object<br>
+     * See newInstance() method.
+     *
+     * @param mbui
+     * @param _lokng
+     * @param lang
+     * @param modal
+     * @return
+     */
+    protected LangSelectDialog buildThis(MacroBuilderUI mbui, InterfaceLangOKNG _lokng, Encode lang, Dialog.ModalityType modal) {
         this.mbui = mbui;
         initComponents();
         LangOKNG = _lokng;
@@ -41,6 +75,7 @@ public final class LangSelectDialog extends javax.swing.JDialog {
         LANGUAGE.setSelectedItem(lang.getIANACharsetName());
         pack();
         setLocationRelativeTo(getOwner());
+        return this;
     }
     
     public void setLang(Encode lang){
