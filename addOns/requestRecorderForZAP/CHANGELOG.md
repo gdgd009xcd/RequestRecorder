@@ -3,6 +3,10 @@ All notable changes to this add-on will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [v1.2.5] - 2025-03-11
+### Changed
+- bugfix: fixed the problem of hanging up when send message with enabling zap's original authentication in Context.
+
 ## [v1.2.4] - 2024-12-25
 ### Changed
 - maintenance: code was changed to prepare for new java version and ubuntu 24.04

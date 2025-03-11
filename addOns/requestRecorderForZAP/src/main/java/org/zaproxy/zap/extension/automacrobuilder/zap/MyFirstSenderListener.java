@@ -73,6 +73,7 @@ public class MyFirstSenderListener implements HttpSenderListener {
                             + getURL(arg0)
                             + "]");
 
+            arg2.setRemoveUserDefinedAuthHeaders(true);
             // if (this.startedcon.isSenderFromStartedActiveScanners(arg2) ) {
             if (this.startedcon.isThreadFromStartedActiveScanners(
                     ParmGenUtil.getThreadId(Thread.currentThread()))) {

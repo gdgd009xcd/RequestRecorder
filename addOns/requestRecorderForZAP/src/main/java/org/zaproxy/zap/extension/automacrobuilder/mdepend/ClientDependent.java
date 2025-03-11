@@ -25,11 +25,14 @@ import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpMethodHelper;
 import org.parosproxy.paros.network.HttpResponseHeader;
 import org.parosproxy.paros.network.HttpSender;
+import org.zaproxy.zap.authentication.AuthenticationMethod;
+import org.zaproxy.zap.authentication.HttpAuthenticationMethodType;
 import org.zaproxy.zap.extension.automacrobuilder.PRequest;
 import org.zaproxy.zap.extension.automacrobuilder.PRequestResponse;
 import org.zaproxy.zap.extension.automacrobuilder.UUIDGenerator;
 import org.zaproxy.zap.extension.automacrobuilder.zap.ZapUtil;
 import org.zaproxy.zap.network.HttpRequestConfig;
+import org.zaproxy.zap.users.User;
 
 /**
  * @author gdgd009xcd
@@ -181,15 +184,16 @@ public class ClientDependent {
     }
 
     /**
-     * create null RequestConfig which has No Sender Listeners.
+     * create RequestConfig
      *
-     * @return
+     * @param httpAuthEnabled true: enable notifyListers false: disable notifyListeners
+     * @return HttpRequestConfig instance
      */
-    private HttpRequestConfig getHttpRequestConfig() {
-        if (httpRequestConfig == null) {
+    private HttpRequestConfig getHttpRequestConfig(boolean httpAuthEnabled) {
+        if (httpRequestConfig == null || httpRequestConfig.isNotifyListeners() != httpAuthEnabled) {
             HttpRequestConfig.Builder builder = HttpRequestConfig.builder();
             builder.setFollowRedirects(false);
-            builder.setNotifyListeners(false);
+            builder.setNotifyListeners(httpAuthEnabled);
             httpRequestConfig = builder.build();
             int sotimeout = httpRequestConfig.getSoTimeout();
             LOGGER4J.debug("default timeout=" + sotimeout);
@@ -206,11 +210,38 @@ public class ClientDependent {
      */
     public void send(HttpSender sender, HttpMessage msg) throws IOException {
         sender.setFollowRedirect(false); // No follow redirects
+
         msg.setRequestingUser(null); // No Authenticate
-        sender.setUser(null); // No Authenticate
+
+        User user = sender.getUser(msg); // user which is provided by sender through scanners.
+
+        boolean httpAuthEnabled = false;
+        if (user != null) {
+            org.zaproxy.zap.model.Context context = user.getContext();
+            if (context != null) {
+                AuthenticationMethod authenticationMethod = context.getAuthenticationMethod();
+                if (authenticationMethod
+                        instanceof HttpAuthenticationMethodType.HttpAuthenticationMethod) {
+                    httpAuthEnabled = true;
+                    LOGGER4J.debug("authenticationMethod is HttpAuthenticationMethod");
+                } else {
+                    LOGGER4J.debug("authenticationMethod is not HttpAuthenticationMethod or null");
+                }
+            } else {
+                LOGGER4J.debug("User::getContext returns null");
+            }
+        } else {
+            LOGGER4J.debug("HttpSender::getUser returns null");
+        }
+
+        if (httpAuthEnabled) {
+            sender.setRemoveUserDefinedAuthHeaders(true);
+        } else {
+            sender.setUser(null); // No Authenticate
+        }
 
         ZapUtil.updateOriginalEncodedHttpMessage(msg);
-        sender.sendAndReceive(msg, getHttpRequestConfig());
+        sender.sendAndReceive(msg, getHttpRequestConfig(true));
     }
 
     public int getScanQuePercentage() {
