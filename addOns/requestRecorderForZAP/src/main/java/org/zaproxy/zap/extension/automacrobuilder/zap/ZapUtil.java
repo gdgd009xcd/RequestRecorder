@@ -530,4 +530,16 @@ public class ZapUtil {
         }
         return text;
     }
+
+    /**
+     * get Extension instance associated with the specified class
+     *
+     * @param exClass
+     * @return
+     * @param <T>
+     */
+    public static <T extends Extension> T getExtensionInstance(Class<T> exClass) {
+        T ext = Control.getSingleton().getExtensionLoader().getExtension(exClass);
+        return ext;
+    }
 }

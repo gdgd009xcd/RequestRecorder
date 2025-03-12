@@ -16,10 +16,12 @@
 package org.zaproxy.zap.extension.automacrobuilder.mdepend;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.parosproxy.paros.Constant;
+import org.parosproxy.paros.model.Model;
 import org.parosproxy.paros.network.HttpHeader;
 import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpMethodHelper;
@@ -31,6 +33,8 @@ import org.zaproxy.zap.extension.automacrobuilder.PRequest;
 import org.zaproxy.zap.extension.automacrobuilder.PRequestResponse;
 import org.zaproxy.zap.extension.automacrobuilder.UUIDGenerator;
 import org.zaproxy.zap.extension.automacrobuilder.zap.ZapUtil;
+import org.zaproxy.zap.extension.forceduser.ExtensionForcedUser;
+import org.zaproxy.zap.model.Context;
 import org.zaproxy.zap.network.HttpRequestConfig;
 import org.zaproxy.zap.users.User;
 
@@ -45,6 +49,8 @@ public class ClientDependent {
     }
 
     private HttpRequestConfig httpRequestConfig = null;
+
+    private ExtensionForcedUser extensionForcedUser = null;
 
     private static final org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
@@ -201,6 +207,31 @@ public class ClientDependent {
         return httpRequestConfig;
     }
 
+    private ExtensionForcedUser getExtensionForcedUserInstance() {
+        if (extensionForcedUser == null) {
+            extensionForcedUser = ZapUtil.getExtensionInstance(ExtensionForcedUser.class);
+        }
+        return extensionForcedUser;
+    }
+
+    private boolean isHttpAuthenticated(User user) {
+        boolean httpAuthEnabled = false;
+        org.zaproxy.zap.model.Context context = user.getContext();
+        if (context != null) {
+            AuthenticationMethod authenticationMethod = context.getAuthenticationMethod();
+            if (authenticationMethod
+                    instanceof HttpAuthenticationMethodType.HttpAuthenticationMethod) {
+                httpAuthEnabled = true;
+                LOGGER4J.debug("authenticationMethod is HttpAuthenticationMethod");
+            } else {
+                LOGGER4J.debug("authenticationMethod is not HttpAuthenticationMethod or null");
+            }
+        } else {
+            LOGGER4J.debug("User::getContext returns null");
+        }
+        return httpAuthEnabled;
+    }
+
     /**
      * send HttpMessage Without SenderListener and Authentication.
      *
@@ -217,31 +248,40 @@ public class ClientDependent {
 
         boolean httpAuthEnabled = false;
         if (user != null) {
-            org.zaproxy.zap.model.Context context = user.getContext();
-            if (context != null) {
-                AuthenticationMethod authenticationMethod = context.getAuthenticationMethod();
-                if (authenticationMethod
-                        instanceof HttpAuthenticationMethodType.HttpAuthenticationMethod) {
-                    httpAuthEnabled = true;
-                    LOGGER4J.debug("authenticationMethod is HttpAuthenticationMethod");
-                } else {
-                    LOGGER4J.debug("authenticationMethod is not HttpAuthenticationMethod or null");
-                }
-            } else {
-                LOGGER4J.debug("User::getContext returns null");
-            }
+            httpAuthEnabled = isHttpAuthenticated(user);
         } else {
             LOGGER4J.debug("HttpSender::getUser returns null");
         }
 
         if (httpAuthEnabled) {
+            LOGGER4J.debug("sender user is httpAuthenticated");
             sender.setRemoveUserDefinedAuthHeaders(true);
         } else {
             sender.setUser(null); // No Authenticate
+            List<Context> contexts = Model.getSingleton().getSession().getContexts();
+            for (Context context : contexts) {
+                if (context.isInContext(msg.getRequestHeader().getURI().toString())) {
+                    // is enabled forceUser?
+                    User forcedUser =
+                            getExtensionForcedUserInstance().getForcedUser(context.getId());
+                    if (forcedUser != null) {
+                        httpAuthEnabled = isHttpAuthenticated(forcedUser);
+                        if (httpAuthEnabled) {
+                            LOGGER4J.debug("forcedUser is httpAuthenticated");
+                            sender.setRemoveUserDefinedAuthHeaders(true);
+                            break;
+                        } else {
+                            LOGGER4J.debug("forcedUser is Not HttpAuthenticated.");
+                        }
+                    } else {
+                        LOGGER4J.debug("forced User is null");
+                    }
+                }
+            }
         }
 
         ZapUtil.updateOriginalEncodedHttpMessage(msg);
-        sender.sendAndReceive(msg, getHttpRequestConfig(true));
+        sender.sendAndReceive(msg, getHttpRequestConfig(httpAuthEnabled));
     }
 
     public int getScanQuePercentage() {
