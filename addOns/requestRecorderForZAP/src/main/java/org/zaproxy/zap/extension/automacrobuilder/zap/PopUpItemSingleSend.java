@@ -152,11 +152,9 @@ public class PopUpItemSingleSend extends JMenuItem {
                                 }
                             });
             t.start();
-            try {
-                t.join();
-            } catch (InterruptedException ex) {
-                LOGGER4J.error("", ex);
-            }
+            // no need t.join();
+            // because there is swing action in HttpSender::sendAndReceive method,
+            // so t.join will stop to dispatch swing event queue in current main thread.
         }
     }
 

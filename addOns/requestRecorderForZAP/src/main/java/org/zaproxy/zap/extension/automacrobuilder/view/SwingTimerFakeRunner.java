@@ -92,7 +92,6 @@ public class SwingTimerFakeRunner {
         // these runnable will be invoked where is within Swing dispatcher.
         // so this runnable will called almost all thread done.
         ZapUtil.SwingInvokeLaterIfNeeded(runnable);
-
     }
 
 
