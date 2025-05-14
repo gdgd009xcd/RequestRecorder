@@ -19,9 +19,7 @@ import org.parosproxy.paros.control.Control;
 import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpRequestHeader;
 import org.parosproxy.paros.network.HttpSender;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTraceProvider;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenUtil;
-import org.zaproxy.zap.extension.automacrobuilder.ThreadManagerProvider;
+import org.zaproxy.zap.extension.automacrobuilder.*;
 import org.zaproxy.zap.extension.forceduser.ExtensionForcedUser;
 import org.zaproxy.zap.network.HttpSenderListener;
 
@@ -80,8 +78,8 @@ public class MyFirstSenderListener implements HttpSenderListener {
                 // only call following methods when Scanner.start(Target) is called by
                 // ExtensionActiveScanWrapper
                 // forceUser set to null for disabling authentication.
-                arg0.setRequestingUser(null);
-                arg2.setUser(null);
+                // arg0.setRequestingUser(null);
+                // arg2.setUser(null);
                 // disable redirect
                 // arg2.setFollowRedirect(false);
                 // run preMacro
@@ -145,6 +143,16 @@ public class MyFirstSenderListener implements HttpSenderListener {
 
                 LOGGER4J.debug(
                         "onHttpResponseReceive: no action. sender is not created by ExtensionActiveScanWrapper");
+            }
+            if (arg1 == HttpSender.MANUAL_REQUEST_INITIATOR) {
+                if (EnvironmentVariables.isModified()) {
+                    LOGGER4J.debug(
+                            "onHttpResponseReceive MANUAL_REQUEST_INITIATOR save configs to json file.");
+                    // if you have been saved params and modified it then overwrite.
+                    ParmGenMacroTraceProvider pmtProvider = this.startedcon.getPmtProvider();
+                    ParmGenGSONSaveV2 gson = new ParmGenGSONSaveV2(pmtProvider);
+                    gson.GSONsave(null);
+                }
             }
         } finally {
             if (mustCleanUp) {

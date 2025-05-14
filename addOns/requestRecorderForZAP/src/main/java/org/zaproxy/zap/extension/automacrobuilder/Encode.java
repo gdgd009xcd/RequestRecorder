@@ -197,15 +197,13 @@ public enum Encode {
     x_windows_iso2022jp("x-windows-iso2022jp");
 
     private final String name; // == Charset.name() is CASE-INSENSITIVE!
-    private final String uppercasename; // == Charset.name().toUpperCase()
 
     private static org.apache.logging.log4j.Logger logger4j =
             org.apache.logging.log4j.LogManager.getLogger();
 
-    // コンストラクタ
+    // Constructor
     Encode(String _name) {
         this.name = _name; // IANA Charset name == Charset.name()
-        this.uppercasename = _name.toUpperCase();
     }
 
     public String getIANACharsetName() {
@@ -227,17 +225,17 @@ public enum Encode {
     }
 
     public static Encode getEnum(String str) {
-        // enum型全てを取得します。
+        // get all enums.
         Encode[] enumArray = Encode.values();
 
         try {
             Charset cset = Charset.forName(str);
-            String charsetname = cset.name();
+            String charSetName = cset.name();
 
-            // 取得出来たenum型分ループします。
+            // loop each Encode value in enumArray.
             for (Encode enumStr : enumArray) {
-                // 引数とenum型の文字列部分を比較します。
-                if (charsetname.toUpperCase().equals(enumStr.uppercasename)) {
+                // compare charSetName with enum's Charset name
+                if (charSetName.equalsIgnoreCase(enumStr.name)) {
                     return enumStr;
                 }
             }
@@ -248,18 +246,18 @@ public enum Encode {
     }
 
     public static boolean isExistEnc(String str) {
-        // enum型全てを取得します。
+        // get all enums
         Encode[] enumArray = Encode.values();
 
         if (str != null) {
             try {
                 Charset cset = Charset.forName(str);
-                String charsetname = cset.name();
+                String charSetName = cset.name();
 
-                // 取得出来たenum型分ループします。
+                // loop each Encode value in enumArray.
                 for (Encode enumStr : enumArray) {
-                    // 引数とenum型の文字列部分を比較します。
-                    if (charsetname.toUpperCase().equals(enumStr.uppercasename)) {
+                    // compare charSetName with enum's Charset name
+                    if (charSetName.equalsIgnoreCase(enumStr.name)) {
                         return true;
                     }
                 }

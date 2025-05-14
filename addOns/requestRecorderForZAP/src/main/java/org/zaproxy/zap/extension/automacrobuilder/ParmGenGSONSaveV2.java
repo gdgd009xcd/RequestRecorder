@@ -15,14 +15,12 @@
  */
 package org.zaproxy.zap.extension.automacrobuilder;
 
-import static org.zaproxy.zap.extension.automacrobuilder.Encode.UTF_8;
 import static org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables.JSONFileIANACharsetName;
 
 import com.google.gson.GsonBuilder;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -35,46 +33,6 @@ public class ParmGenGSONSaveV2 {
             org.apache.logging.log4j.LogManager.getLogger();
     ParmGenWriteFile pfile;
     private ParmGenMacroTraceProvider pmtProvider = null;
-    public static ArrayList<PRequestResponse> selected_messages = null;
-    public static ArrayList<PRequestResponse> proxy_messages = null;
-
-    /**
-     * Constructor for customActionPerformed method
-     *
-     * @param _selected_messages
-     */
-    public ParmGenGSONSaveV2(
-            ParmGenMacroTraceProvider pmtProvider, ArrayList<PRequestResponse> _selected_messages) {
-        this.pmtProvider = pmtProvider;
-        selected_messages = new ArrayList<PRequestResponse>();
-        proxy_messages = _selected_messages;
-        if (proxy_messages == null || proxy_messages.isEmpty()) {
-            // create dummy message
-            String requeststr =
-                    "GET /index.php?DB=1 HTTP/1.1\r\n"
-                            + "Host: test\r\n"
-                            + "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0\r\n\r\n";
-            String responsestr =
-                    "HTTP/1.1 200 OK\r\n"
-                            + "Date: Sat, 20 Jun 2020 01:10:28 GMT\r\n"
-                            + "Content-Length: 0\r\n"
-                            + "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-
-            PRequestResponse dummy =
-                    new PRequestResponse(
-                            "localhost",
-                            80,
-                            false,
-                            requeststr.getBytes(),
-                            responsestr.getBytes(),
-                            UTF_8,
-                            UTF_8);
-            proxy_messages = proxy_messages == null ? new ArrayList<>() : proxy_messages;
-            proxy_messages.add(dummy);
-        }
-        selected_messages.add(proxy_messages.get(0));
-        pfile = null;
-    }
 
     public ParmGenGSONSaveV2(ParmGenMacroTraceProvider pmtProvider) {
         this.pmtProvider = pmtProvider;
@@ -115,9 +73,9 @@ public class ParmGenGSONSaveV2 {
      * @return true-succeed false-failed
      */
     public boolean GSONsave(String choosedFileName) {
-        // ファイル初期化
+        String fileName;
         try {
-            String fileName = EnvironmentVariables.getSaveFilePathName();
+            fileName = EnvironmentVariables.getSaveFilePathName();
             if (choosedFileName != null && !choosedFileName.isEmpty()) {
                 fileName = choosedFileName;
             }
@@ -168,14 +126,16 @@ public class ParmGenGSONSaveV2 {
                 AppParmsIni_ListObj.typeval = prec.getTypeVal();
                 AppParmsIni_ListObj.inival = prec.getIniVal();
                 AppParmsIni_ListObj.maxval = prec.getMaxVal();
+                AppParmsIni_ListObj.cntCount = prec.getCntCount();
                 AppParmsIni_ListObj.csvname =
                         (prec.getTypeVal() == AppParmsIni.T_CSV
                                 ? URLencodeToJSON(prec.getFrlFileName())
                                 : "");
+                AppParmsIni_ListObj.csvSeekIndex = prec.getCsvSeekIndex();
+                AppParmsIni_ListObj.csvCurrentRecordNumber = prec.getCsvCurrentRecordNumber();
                 AppParmsIni_ListObj.pause = prec.isPaused();
                 AppParmsIni_ListObj.TrackFromStep = prec.getTrackFromStep();
                 AppParmsIni_ListObj.SetToStep = prec.getSetToStep();
-                AppParmsIni_ListObj.relativecntfilename = prec.getRelativeCntFileName();
 
                 Iterator<AppValue> pt = prec.getAppValueReadWriteOriginal().iterator();
 
@@ -183,23 +143,29 @@ public class ParmGenGSONSaveV2 {
                     AppValue param = pt.next();
                     GSONSaveObjectV2.AppValue_List AppValue_ListObj =
                             new GSONSaveObjectV2.AppValue_List();
-                    AppValue_ListObj.valpart = param.getValPart();
+                    AppValue_ListObj.valpart = param.getHttpSectionTypeEmbedTo();
                     AppValue_ListObj.isEnabled = param.isEnabled();
                     AppValue_ListObj.isNoCount = param.isNoCount();
                     AppValue_ListObj.csvpos = param.getCsvpos();
-                    AppValue_ListObj.value = URLencodeToJSON(param.getVal());
-                    AppValue_ListObj.resURL = param.getresURL() == null ? "" : param.getresURL();
-                    AppValue_ListObj.resRegex =
-                            (URLencodeToJSON(param.getresRegex()) == null
+                    AppValue_ListObj.value = URLencodeToJSON(param.getRegexEmbedValTo());
+                    AppValue_ListObj.resURL =
+                            param.getRegexTrackURLFrom() == null
                                     ? ""
-                                    : URLencodeToJSON(param.getresRegex()));
-                    AppValue_ListObj.resValpart = param.getResValPart();
-                    AppValue_ListObj.resRegexPos = param.getResRegexPos();
-                    AppValue_ListObj.token = param.getToken() == null ? "" : param.getToken();
+                                    : param.getRegexTrackURLFrom();
+                    AppValue_ListObj.resRegex =
+                            (URLencodeToJSON(param.getRegexTrackValFrom()) == null
+                                    ? ""
+                                    : URLencodeToJSON(param.getRegexTrackValFrom()));
+                    AppValue_ListObj.resValpart = param.getHttpSectionTypeTrackFrom();
+                    AppValue_ListObj.resRegexPos = param.getPositionTrackFrom();
+                    AppValue_ListObj.token =
+                            param.getParamNameTrackFrom() == null
+                                    ? ""
+                                    : param.getParamNameTrackFrom();
                     AppValue_ListObj.urlencode = param.isUrlEncode();
                     AppValue_ListObj.fromStepNo = param.getFromStepNo();
                     AppValue_ListObj.toStepNo = param.getToStepNo();
-                    AppValue_ListObj.TokenType = param.getTokenType().name();
+                    AppValue_ListObj.tokenType = param.getTokenTypeTrackFrom();
                     AppValue_ListObj.condTargetNo = param.getCondTargetNo();
                     AppValue_ListObj.condRegex =
                             (URLencodeToJSON(param.getCondRegex()) == null
@@ -227,8 +193,9 @@ public class ParmGenGSONSaveV2 {
 
         pfile.close();
         pfile = null;
-        EnvironmentVariables.commitChoosedFile(choosedFileName);
+        EnvironmentVariables.commitChoosedFile(fileName);
         EnvironmentVariables.Saved(true);
+        EnvironmentVariables.modified(false);
         return true;
     }
 }

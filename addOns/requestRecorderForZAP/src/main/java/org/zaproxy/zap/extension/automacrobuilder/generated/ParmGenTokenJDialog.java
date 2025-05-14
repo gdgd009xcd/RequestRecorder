@@ -96,8 +96,8 @@ public class ParmGenTokenJDialog extends javax.swing.JDialog {
         ParmGenToken token = null;
         for(AppParmsIni pini: newparms){
             for(AppValue ap: pini.getAppValueReadWriteOriginal()){
-                tkey = new ParmGenTokenKey(ap.getTokenType(), ap.getToken(), ap.getResRegexPos());
-                tval = new ParmGenTokenValue(ap.getresURL(), ap.getResFetchedValue(), ap.isEnabled());
+                tkey = new ParmGenTokenKey(ap.getTokenTypeTrackFrom(), ap.getParamNameTrackFrom(), ap.getPositionTrackFrom());
+                tval = new ParmGenTokenValue(ap.getRegexTrackURLFrom(), ap.getResFetchedValue(), ap.isEnabled());
                 map.put(tkey, tval);
             }
         }
@@ -301,7 +301,7 @@ public class ParmGenTokenJDialog extends javax.swing.JDialog {
             int fcnt = Integer.parseInt((String)model.getValueAt(i, 3));//Appearance number: ascending order　0start
             String tokenname = (String)model.getValueAt(i, 4);//token name
             String resFetchedValue = (String)model.getValueAt(i, 5);//token value
-            ParmGenTokenKey tkey = new ParmGenTokenKey(AppValue.parseTokenTypeName(tokentypename),tokenname, fcnt);
+            ParmGenTokenKey tkey = new ParmGenTokenKey(AppValue.TokenTypeNames.parseString(tokentypename),tokenname, fcnt);
             ParmGenTokenValue tval = new ParmGenTokenValue(resAttrName, resFetchedValue, enabled);
             map.put(tkey, tval);
         }
@@ -318,7 +318,7 @@ public class ParmGenTokenJDialog extends javax.swing.JDialog {
                     apvit = apvlist.listIterator();
                     while(apvit.hasNext()){
                         AppValue ap = apvit.next();
-                        ParmGenTokenKey _tkey = new ParmGenTokenKey(ap.getTokenType(), ap.getToken(), ap.getResRegexPos());
+                        ParmGenTokenKey _tkey = new ParmGenTokenKey(ap.getTokenTypeTrackFrom(), ap.getParamNameTrackFrom(), ap.getPositionTrackFrom());
                         if(map.containsKey(_tkey)){
                             ParmGenTokenValue _tval = map.get(_tkey);
                             if(_tval.getBoolean()){

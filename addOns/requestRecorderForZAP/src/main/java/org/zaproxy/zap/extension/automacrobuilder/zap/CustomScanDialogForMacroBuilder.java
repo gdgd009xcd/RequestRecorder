@@ -58,8 +58,8 @@ public class CustomScanDialogForMacroBuilder
      * @param choices
      * @param value
      */
-    @Override
-    public void setComboFields(String fieldLabel, List<String> choices, String value) {
+    @Deprecated
+    public void setComboFieldsDeprecated(String fieldLabel, List<String> choices, String value) {
 
         if (fieldLabel != null && fieldLabel.equals("ascan.custom.label.user")) {
             List<String> blanks = java.util.Arrays.asList(new String[] {""});

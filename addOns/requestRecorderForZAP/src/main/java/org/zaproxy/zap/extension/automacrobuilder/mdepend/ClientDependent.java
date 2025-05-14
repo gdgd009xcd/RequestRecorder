@@ -239,7 +239,8 @@ public class ClientDependent {
      * @param msg
      * @throws IOException
      */
-    public void send(HttpSender sender, HttpMessage msg) throws IOException {
+    @Deprecated
+    public void sendDeprecated20250401(HttpSender sender, HttpMessage msg) throws IOException {
         sender.setFollowRedirect(false); // No follow redirects
 
         msg.setRequestingUser(null); // No Authenticate
@@ -281,7 +282,13 @@ public class ClientDependent {
         }
 
         ZapUtil.updateOriginalEncodedHttpMessage(msg);
-        sender.sendAndReceive(msg, getHttpRequestConfig(httpAuthEnabled));
+        sender.sendAndReceive(msg, getHttpRequestConfig(true));
+    }
+
+    public void send(HttpSender sender, HttpMessage msg) throws IOException {
+        sender.setFollowRedirect(false); // No follow redirects
+        ZapUtil.updateOriginalEncodedHttpMessage(msg);
+        sender.sendAndReceive(msg, getHttpRequestConfig(true));
     }
 
     public int getScanQuePercentage() {

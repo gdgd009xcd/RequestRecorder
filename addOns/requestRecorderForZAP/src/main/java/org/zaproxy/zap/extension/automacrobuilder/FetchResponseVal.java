@@ -18,8 +18,6 @@ package org.zaproxy.zap.extension.automacrobuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
 // <?xml version="1.0" encoding="utf-8"?>
@@ -230,22 +228,23 @@ class FetchResponseVal implements DeepClone {
         return false;
     }
 
-    // void copyLocVal(int fr, int fc, int tr, int tc){
-    //    if(isValid(fr,fc) && isValid(tr,tc)){
-    //	String v = locarray[fr][fc];
-    //        int stepno = responseStepNos[fr][fc];
-    //	setLocVal(stepno, -1, tr, tc, v, true);
-    //    }
-    // }
-
     void printlog(String v) {
         LOGGER4J.info(v);
     }
 
-    //
-    // header match
-    //
-    boolean headermatch(
+    /**
+     * extract tracking source parameters from the header of the response
+     *
+     * @param pmt
+     * @param url
+     * @param presponse
+     * @param r
+     * @param c
+     * @param overwrite
+     * @param av
+     * @return
+     */
+    boolean responseHeaderMatch(
             ParmGenMacroTrace pmt,
             String url,
             PResponse presponse,
@@ -255,8 +254,8 @@ class FetchResponseVal implements DeepClone {
             AppValue av) {
         int currentStepNo = pmt.getStepNo();
         int fromStepNo = av.getFromStepNo();
-        String name = av.getToken();
-        AppValue.TokenTypeNames _tokentype = av.getTokenType();
+        String name = av.getParamNameTrackFrom();
+        AppValue.TokenTypeNames _tokentype = av.getTokenTypeTrackFrom();
         String comments = "";
         if (urlmatch(av, url)) {
             if (_tokentype == AppValue.TokenTypeNames.LOCATION) {
@@ -264,8 +263,8 @@ class FetchResponseVal implements DeepClone {
                 if (tkn != null) {
                     ParmGenTokenValue tval = tkn.getTokenValue();
                     if (tval != null) { // value値nullは追跡しない
-                        String matchval = tval.getValue();
-                        if (matchval
+                        String extractedMatchVal = tval.getValue();
+                        if (extractedMatchVal
                                 != null) { // matchval !=null or matchval.isEmpty() is acceptable.
                             if (LOGGER4J.isDebugEnabled()) {
                                 comments =
@@ -274,19 +273,19 @@ class FetchResponseVal implements DeepClone {
                                                 + ","
                                                 + c
                                                 + " => "
-                                                + matchval;
+                                                + extractedMatchVal;
                             } else {
                                 comments =
                                         java.text.MessageFormat.format(
                                                 bundle.getString(
                                                         "FetchResponseVal.getHeaderSucceeded.text"),
                                                 new Object[] {
-                                                    pmt.getStepNo(), "Location", matchval
+                                                    pmt.getStepNo(), "Location", extractedMatchVal
                                                 });
                             }
                             printlog(comments);
                             pmt.addComments(comments);
-                            setLocVal(currentStepNo, fromStepNo, matchval, overwrite, av);
+                            setLocVal(currentStepNo, fromStepNo, extractedMatchVal, overwrite, av);
                             return true;
                         }
                     } else {
@@ -309,7 +308,8 @@ class FetchResponseVal implements DeepClone {
                         pmt.addComments(comments);
                     }
                 }
-            } else if (av.getPattern_resRegex() != null) {
+            }
+            if (av.getPattern_regexTrackValFrom() != null) {
                 //
                 int size = presponse.getHeadersCnt();
                 for (int i = 0; i < size; i++) {
@@ -319,19 +319,19 @@ class FetchResponseVal implements DeepClone {
                     String hval = presponse.getHeaderLine(i);
                     Matcher matcher = null;
                     try {
-                        matcher = av.getPattern_resRegex().matcher(hval);
+                        matcher = av.getPattern_regexTrackValFrom().matcher(hval);
                     } catch (Exception e) {
                         printlog("Exception matcher：" + e.toString());
                     }
                     if (matcher.find()) {
                         int gcnt = matcher.groupCount();
-                        String matchval = null;
+                        String regexExtractedMatchVal = null;
                         for (int n = 0; n < gcnt; n++) {
-                            matchval = matcher.group(n + 1);
+                            regexExtractedMatchVal = matcher.group(n + 1);
                         }
 
-                        if (matchval
-                                != null) { // matchval != null or matchval.isEmpty() is acceptable.
+                        if (regexExtractedMatchVal != null) { // regexExtractedMatchVal != null or
+                            // regexExtractedMatchVal.isEmpty() is acceptable.
                             if (LOGGER4J.isDebugEnabled()) {
                                 comments =
                                         "*****FETCHRESPONSE header r,c/ header: value"
@@ -341,17 +341,24 @@ class FetchResponseVal implements DeepClone {
                                                 + "/"
                                                 + hval
                                                 + " => "
-                                                + matchval;
+                                                + regexExtractedMatchVal;
                             } else {
                                 comments =
                                         java.text.MessageFormat.format(
                                                 bundle.getString(
                                                         "FetchResponseVal.getHeaderSucceeded.text"),
-                                                new Object[] {pmt.getStepNo(), hval, matchval});
+                                                new Object[] {
+                                                    pmt.getStepNo(), hval, regexExtractedMatchVal
+                                                });
                             }
                             printlog(comments);
                             pmt.addComments(comments);
-                            setLocVal(currentStepNo, fromStepNo, matchval, overwrite, av);
+                            setLocVal(
+                                    currentStepNo,
+                                    fromStepNo,
+                                    regexExtractedMatchVal,
+                                    overwrite,
+                                    av);
                             return true;
                         } else {
                             if (LOGGER4J.isDebugEnabled()) {
@@ -381,36 +388,153 @@ class FetchResponseVal implements DeepClone {
         return false;
     }
 
-    //
-    // body match
-    //
-    boolean bodymatch(
+    /**
+     * extract tracking source parameters from the response
+     *
+     * @param pmt
+     * @param url
+     * @param presponse
+     * @param r
+     * @param c
+     * @param overwrite
+     * @param av
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    boolean responseBodyMatch(
             ParmGenMacroTrace pmt,
             String url,
             PResponse presponse,
             int r,
             int c,
             boolean overwrite,
-            boolean autotrack,
             AppValue av)
             throws UnsupportedEncodingException {
         int currentStepNo = pmt.getStepNo();
         int fromStepNo = av.getFromStepNo();
-        int fcnt = av.getResRegexPos();
-        String name = av.getToken();
+        int fcnt = av.getPositionTrackFrom();
+        String name = av.getParamNameTrackFrom();
         boolean _uencode = av.isUrlEncode();
-        AppValue.TokenTypeNames _tokentype = av.getTokenType();
+        AppValue.TokenTypeNames tokenTypeTrackFrom = av.getTokenTypeTrackFrom();
         if (urlmatch(av, url)) {
 
             Matcher matcher = null;
 
-            if (av.getPattern_resRegex() != null
-                    && av.getresRegex() != null
-                    && !av.getresRegex().isEmpty()) { // extracted by regex
+            if (av.getHttpSectionTypeTrackFrom() == AppValue.HttpSectionTypes.ResponseBody) {
+                ParmGenToken tkn = presponse.fetchNameValue(name, tokenTypeTrackFrom, fcnt);
+                if (tkn != null) {
+                    ParmGenTokenValue tval = tkn.getTokenValue();
+                    if (tval != null) {
+                        String v = tval.getValue();
+                        if (v != null) { // this variable != null or isEmpty() is acceptable.
+                            if (_uencode == true && !ParmGenUtil.isURLencoded(v)) {
+                                String venc = v;
+                                try {
+                                    venc =
+                                            URLEncoder.encode(
+                                                    v, presponse.getPageEnc().getIANACharsetName());
+                                } catch (UnsupportedEncodingException e) {
+                                    // NOP
+                                }
+                                v = venc.replaceAll(",", "%2C");
+                            }
+                            String extractedMatchedValue = v;
+
+                            setLocVal(
+                                    currentStepNo,
+                                    fromStepNo,
+                                    extractedMatchedValue,
+                                    overwrite,
+                                    av);
+                            String comments = "";
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "*****FETCHRESPONSE auto track body key/r,c,p:"
+                                                + av.getTrackKey()
+                                                + "/"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ","
+                                                + fcnt
+                                                + ": "
+                                                + name
+                                                + "="
+                                                + v;
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenSucceeded.text"),
+                                                new Object[] {
+                                                    pmt.getStepNo(), name, v, "Response"
+                                                });
+                            }
+                            printlog(comments);
+                            pmt.addComments(comments);
+                            return true;
+                        } else {
+                            String comments = "";
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "xxxxx FAILED FETCHRESPONSE auto track body r,c,p:"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ","
+                                                + fcnt
+                                                + ": "
+                                                + name
+                                                + "="
+                                                + "null";
+
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenFailed.text"),
+                                                new Object[] {
+                                                    pmt.getStepNo(), name, "is null", "Response"
+                                                });
+                            }
+                            LOGGER4J.warn(comments);
+                            pmt.addComments(comments);
+                        }
+                    }
+                } else {
+                    String comments = "";
+                    if (LOGGER4J.isDebugEnabled()) {
+                        comments =
+                                "xxxxx FAILED FETCHRESPONSE auto track body r,c,p:"
+                                        + r
+                                        + ","
+                                        + c
+                                        + ","
+                                        + fcnt
+                                        + ": "
+                                        + name
+                                        + "="
+                                        + "null";
+
+                    } else {
+                        comments =
+                                java.text.MessageFormat.format(
+                                        bundle.getString("FetchResponseVal.getTokenFailed.text"),
+                                        new Object[] {
+                                            pmt.getStepNo(), name, "not found", "Response"
+                                        });
+                    }
+                    LOGGER4J.warn(comments);
+                    pmt.addComments(comments);
+                }
+            }
+            if (av.getPattern_regexTrackValFrom() != null
+                    && av.getRegexTrackValFrom() != null
+                    && !av.getRegexTrackValFrom().isEmpty()) { // extracted by regex
                 String message = presponse.getMessage();
 
                 try {
-                    matcher = av.getPattern_resRegex().matcher(message);
+                    matcher = av.getPattern_regexTrackValFrom().matcher(message);
                 } catch (Exception e) {
                     String comments =
                             "xxxxx EXCEPTION FETCHRESPONSE r,c:"
@@ -419,9 +543,9 @@ class FetchResponseVal implements DeepClone {
                                     + c
                                     + ": "
                                     + name
-                                    + " 正規表現["
-                                    + av.getresRegex()
-                                    + "] 例外："
+                                    + " regex["
+                                    + av.getRegexTrackValFrom()
+                                    + "] exception："
                                     + e.toString();
                     LOGGER4J.warn(comments);
                     pmt.addComments(comments);
@@ -436,7 +560,7 @@ class FetchResponseVal implements DeepClone {
                     }
 
                     if (matchval != null) {
-                        switch (av.getResEncodeType()) {
+                        switch (tokenTypeTrackFrom) {
                             case JSON:
                                 ParmGenGSONDecoder jdec = new ParmGenGSONDecoder(null);
                                 matchval = jdec.decodeStringValue(matchval);
@@ -454,15 +578,20 @@ class FetchResponseVal implements DeepClone {
                             } catch (UnsupportedEncodingException e) {
                                 // NOP
                             }
-                            matchval = venc;
+                            matchval = venc.replaceAll(",", "%2C");
                         }
-                        String ONETIMEPASSWD = matchval.replaceAll(",", "%2C");
+                        String regexExtractedMatchedValue = matchval;
                         String comments = "";
 
-                        if (ONETIMEPASSWD
+                        if (regexExtractedMatchedValue
                                 != null) { // this variable !=null or isEmpty() is acceptable.
 
-                            setLocVal(currentStepNo, fromStepNo, ONETIMEPASSWD, overwrite, av);
+                            setLocVal(
+                                    currentStepNo,
+                                    fromStepNo,
+                                    regexExtractedMatchedValue,
+                                    overwrite,
+                                    av);
                             if (LOGGER4J.isDebugEnabled()) {
                                 comments =
                                         "*****FETCHRESPONSE body key/r,c:"
@@ -474,7 +603,7 @@ class FetchResponseVal implements DeepClone {
                                                 + ": "
                                                 + name
                                                 + "="
-                                                + ONETIMEPASSWD;
+                                                + regexExtractedMatchedValue;
                             } else {
                                 comments =
                                         java.text.MessageFormat.format(
@@ -556,7 +685,7 @@ class FetchResponseVal implements DeepClone {
                                         new Object[] {
                                             pmt.getStepNo(),
                                             name,
-                                            "No matched regex[" + av.getresRegex() + "]",
+                                            "No matched regex[" + av.getRegexTrackValFrom() + "]",
                                             "Response"
                                         });
                     }
@@ -564,75 +693,109 @@ class FetchResponseVal implements DeepClone {
                     pmt.addComments(comments);
                 }
             } else { // extract parameter from parse response
-                if (autotrack) {
-                    // ParmGenParser parser = new ParmGenParser(body);
-                    // ParmGenToken tkn = parser.fetchNameValue(name, fcnt,
-                    // _tokentype);
-                    ParmGenToken tkn = presponse.fetchNameValue(name, _tokentype, fcnt);
-                    if (tkn != null) {
-                        ParmGenTokenValue tval = tkn.getTokenValue();
-                        if (tval != null) {
-                            String v = tval.getValue();
-                            if (v != null) { // this variable != null or isEmpty() is acceptable.
 
-                                if (_uencode == true && !ParmGenUtil.isURLencoded(v)) {
-                                    String venc = v;
-                                    try {
-                                        venc =
-                                                URLEncoder.encode(
-                                                        v,
-                                                        presponse
-                                                                .getPageEnc()
-                                                                .getIANACharsetName());
-                                    } catch (UnsupportedEncodingException e) {
-                                        // NOP
+            }
+        }
+        return false;
+    }
+
+    /**
+     * extract tracking source parameters from the request
+     *
+     * @param pmt
+     * @param av
+     * @param url
+     * @param pRequest
+     * @param r
+     * @param c
+     * @param overwrite
+     * @return
+     */
+    boolean requestBodyMatch(
+            ParmGenMacroTrace pmt,
+            AppValue av,
+            String url,
+            PRequest pRequest,
+            int r,
+            int c,
+            boolean overwrite) {
+        int currentStepNo = pmt.getStepNo();
+        int fromStepNo = av.getFromStepNo();
+        int fcnt = av.getPositionTrackFrom();
+        String name = av.getParamNameTrackFrom();
+        boolean isUrlEncoded = av.isUrlEncode();
+        String comments = "";
+        if (urlmatch(av, url)) {
+            Matcher matcher = null;
+            if (av.getHttpSectionTypeTrackFrom() == AppValue.HttpSectionTypes.RequestBody
+                    && name != null
+                    && !name.isEmpty()) {
+                if (av.getTokenTypeTrackFrom() != AppValue.TokenTypeNames.JSON) {
+                    List<String[]> namelist = pRequest.getBodyParamsFromRequest();
+                    Iterator<String[]> it = namelist.iterator();
+                    Map<String, Integer> sameNameHash = new HashMap<String, Integer>();
+                    while (it.hasNext()) {
+                        String[] nv = it.next();
+                        int npos = 0;
+                        String nvName = nv[0];
+                        if (sameNameHash.containsKey(nvName)) {
+                            npos = sameNameHash.get(nvName);
+                            npos++;
+                        }
+                        sameNameHash.put(nvName, npos);
+                        if (name.equals(nv[0]) && npos == fcnt) {
+                            if (nv.length > 1 && nv[1] != null) {
+                                String valueString = nv[1];
+                                // this variable is != null or isEmpty() is
+                                // acceptable
+                                // if target parameter is not URLencoded and extracted the value is
+                                // encoded
+                                // then it should decode the value.
+                                if (!isUrlEncoded && ParmGenUtil.isURLencoded(valueString)) {
+                                    String decodedString =
+                                            ParmGenUtil.URLdecode(
+                                                    valueString,
+                                                    pRequest.getPageEnc().getIANACharsetName());
+                                    if (!decodedString.isEmpty()) {
+                                        valueString = decodedString;
                                     }
-                                    v = venc;
                                 }
-                                String ONETIMEPASSWD = v.replaceAll(",", "%2C");
-
-                                setLocVal(currentStepNo, fromStepNo, ONETIMEPASSWD, overwrite, av);
-                                String comments = "";
                                 if (LOGGER4J.isDebugEnabled()) {
                                     comments =
-                                            "*****FETCHRESPONSE auto track body key/r,c,p:"
-                                                    + av.getTrackKey()
-                                                    + "/"
+                                            "******FETCH REQUEST body r,c: name=value:"
                                                     + r
                                                     + ","
                                                     + c
-                                                    + ","
-                                                    + fcnt
                                                     + ": "
-                                                    + name
+                                                    + nv[0]
                                                     + "="
-                                                    + v;
+                                                    + valueString;
                                 } else {
                                     comments =
                                             java.text.MessageFormat.format(
                                                     bundle.getString(
                                                             "FetchResponseVal.getTokenSucceeded.text"),
                                                     new Object[] {
-                                                        pmt.getStepNo(), name, v, "Response"
+                                                        pmt.getStepNo(),
+                                                        nv[0],
+                                                        valueString,
+                                                        "Request"
                                                     });
                                 }
                                 printlog(comments);
                                 pmt.addComments(comments);
+                                setLocVal(currentStepNo, fromStepNo, valueString, overwrite, av);
                                 return true;
                             } else {
-                                String comments = "";
                                 if (LOGGER4J.isDebugEnabled()) {
                                     comments =
-                                            "xxxxx FAILED FETCHRESPONSE auto track body r,c,p:"
+                                            "xxxxxFAILED FETCH REQUEST body r,c: name=value:"
                                                     + r
                                                     + ","
                                                     + c
-                                                    + ","
-                                                    + fcnt
                                                     + ": "
-                                                    + name
-                                                    + "="
-                                                    + "null";
+                                                    + nv[0]
+                                                    + "=null";
 
                                 } else {
                                     comments =
@@ -640,23 +803,185 @@ class FetchResponseVal implements DeepClone {
                                                     bundle.getString(
                                                             "FetchResponseVal.getTokenFailed.text"),
                                                     new Object[] {
-                                                        pmt.getStepNo(), name, "is null", "Response"
+                                                        pmt.getStepNo(), nv[0], "Request"
                                                     });
                                 }
                                 LOGGER4J.warn(comments);
                                 pmt.addComments(comments);
                             }
                         }
+                    }
+                } else { // token is JSON
+                    ParmGenToken extractedToken = pRequest.getJSONParam(name, fcnt);
+                    if (extractedToken != null) {
+                        String value = extractedToken.getTokenValue().getValue();
+                        if (value != null) { // the empty value is available.
+                            // acceptable
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "******FETCH REQUEST body r,c: name=value:"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ": "
+                                                + name
+                                                + "="
+                                                + value;
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenSucceeded.text"),
+                                                new Object[] {
+                                                    pmt.getStepNo(), name, value, "Request"
+                                                });
+                            }
+                            printlog(comments);
+                            pmt.addComments(comments);
+                            setLocVal(currentStepNo, fromStepNo, value, overwrite, av);
+                            return true;
+                        } else {
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "xxxxxFAILED FETCH REQUEST body r,c: name=value:"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ": "
+                                                + name
+                                                + "=null";
+
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenFailed.text"),
+                                                new Object[] {pmt.getStepNo(), name, "Request"});
+                            }
+                            LOGGER4J.warn(comments);
+                            pmt.addComments(comments);
+                        }
+                    }
+                }
+            }
+            if (av.getPattern_regexTrackValFrom() != null
+                    && av.getRegexTrackValFrom() != null
+                    && !av.getRegexTrackValFrom().isEmpty()) { // extracted by regex
+                String message = pRequest.getMessage();
+
+                try {
+                    matcher = av.getPattern_regexTrackValFrom().matcher(message);
+                } catch (Exception e) {
+                    comments =
+                            "xxxxx EXCEPTION FETCHREQUEST r,c:"
+                                    + r
+                                    + ","
+                                    + c
+                                    + ": "
+                                    + name
+                                    + " regex["
+                                    + av.getRegexTrackValFrom()
+                                    + "] exception："
+                                    + e.toString();
+                    LOGGER4J.warn(comments);
+                    pmt.addComments(comments);
+                    matcher = null;
+                }
+
+                if (matcher != null && matcher.find()) {
+                    int gcnt = matcher.groupCount();
+                    String matchval = null;
+                    for (int n = 0; n < gcnt; n++) {
+                        matchval = matcher.group(n + 1);
+                    }
+
+                    if (matchval != null) {
+                        switch (av.getTokenTypeTrackFrom()) {
+                            case JSON:
+                                ParmGenGSONDecoder jdec = new ParmGenGSONDecoder(null);
+                                matchval = jdec.decodeStringValue(matchval);
+                                break;
+                            default:
+                                break;
+                        }
+                        if (isUrlEncoded == true && !ParmGenUtil.isURLencoded(matchval)) {
+                            String venc = matchval;
+                            try {
+                                venc =
+                                        URLEncoder.encode(
+                                                matchval,
+                                                pRequest.getPageEnc().getIANACharsetName());
+                            } catch (UnsupportedEncodingException e) {
+                                // NOP
+                            }
+                            matchval = venc.replaceAll(",", "%2C");
+                        }
+                        String regexExtractedMatchedValue = matchval;
+
+                        if (regexExtractedMatchedValue
+                                != null) { // this variable !=null or isEmpty() is acceptable.
+
+                            setLocVal(
+                                    currentStepNo,
+                                    fromStepNo,
+                                    regexExtractedMatchedValue,
+                                    overwrite,
+                                    av);
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "*****FETCHREQUEST body key/r,c:"
+                                                + av.getTrackKey()
+                                                + "/"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ": "
+                                                + name
+                                                + "="
+                                                + regexExtractedMatchedValue;
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenSucceeded.text"),
+                                                new Object[] {
+                                                    pmt.getStepNo(), name, matchval, "Request"
+                                                });
+                            }
+                            printlog(comments);
+                            pmt.addComments(comments);
+                            return true;
+                        } else {
+                            if (LOGGER4J.isDebugEnabled()) {
+                                comments =
+                                        "xxxxxx FAILED FETCHREQUEST body r,c:"
+                                                + r
+                                                + ","
+                                                + c
+                                                + ": "
+                                                + name
+                                                + "="
+                                                + "null";
+
+                            } else {
+                                comments =
+                                        java.text.MessageFormat.format(
+                                                bundle.getString(
+                                                        "FetchResponseVal.getTokenFailed.text"),
+                                                new Object[] {
+                                                    pmt.getStepNo(), name, "is null", "Request"
+                                                });
+                            }
+                            LOGGER4J.warn(comments);
+                            pmt.addComments(comments);
+                        }
                     } else {
-                        String comments = "";
                         if (LOGGER4J.isDebugEnabled()) {
                             comments =
-                                    "xxxxx FAILED FETCHRESPONSE auto track body r,c,p:"
+                                    "xxxxxx FAILED FETCHREQUEST body r,c:"
                                             + r
                                             + ","
                                             + c
-                                            + ","
-                                            + fcnt
                                             + ": "
                                             + name
                                             + "="
@@ -668,84 +993,37 @@ class FetchResponseVal implements DeepClone {
                                             bundle.getString(
                                                     "FetchResponseVal.getTokenFailed.text"),
                                             new Object[] {
-                                                pmt.getStepNo(), name, "not found", "Response"
+                                                pmt.getStepNo(), name, "is null", "Request"
                                             });
                         }
                         LOGGER4J.warn(comments);
                         pmt.addComments(comments);
                     }
-                }
-            }
-        }
-        return false;
-    }
+                } else {
+                    if (LOGGER4J.isDebugEnabled()) {
+                        comments =
+                                "xxxxxx FAILED FETCHREQUEST body r,c:"
+                                        + r
+                                        + ","
+                                        + c
+                                        + ": "
+                                        + name
+                                        + "="
+                                        + "null";
 
-    boolean reqbodymatch(
-            ParmGenMacroTrace pmt,
-            AppValue av,
-            String url,
-            PRequest prequest,
-            int r,
-            int c,
-            boolean overwrite) {
-        int currentStepNo = pmt.getStepNo();
-        int fromStepNo = av.getFromStepNo();
-        int fcnt = av.getResRegexPos();
-        String name = av.getToken();
-        String comments = "";
-        if (urlmatch(av, url)) {
-            ArrayList<String[]> namelist = prequest.getBodyParams();
-            Iterator<String[]> it = namelist.iterator();
-            while (it.hasNext()) {
-                String[] nv = it.next();
-                if (name.equals(nv[0])) {
-                    if (nv.length > 1
-                            && nv[1] != null) { // this variable is != null or isEmpty() is
-                        // acceptable
-                        if (LOGGER4J.isDebugEnabled()) {
-                            comments =
-                                    "******FETCH REQUEST body r,c: name=value:"
-                                            + r
-                                            + ","
-                                            + c
-                                            + ": "
-                                            + nv[0]
-                                            + "="
-                                            + nv[1];
-                        } else {
-                            comments =
-                                    java.text.MessageFormat.format(
-                                            bundle.getString(
-                                                    "FetchResponseVal.getTokenSucceeded.text"),
-                                            new Object[] {
-                                                pmt.getStepNo(), nv[0], nv[1], "Request"
-                                            });
-                        }
-                        printlog(comments);
-                        pmt.addComments(comments);
-                        setLocVal(currentStepNo, fromStepNo, nv[1], overwrite, av);
-                        return true;
                     } else {
-                        if (LOGGER4J.isDebugEnabled()) {
-                            comments =
-                                    "xxxxxFAILED FETCH REQUEST body r,c: name=value:"
-                                            + r
-                                            + ","
-                                            + c
-                                            + ": "
-                                            + nv[0]
-                                            + "=null";
-
-                        } else {
-                            comments =
-                                    java.text.MessageFormat.format(
-                                            bundle.getString(
-                                                    "FetchResponseVal.getTokenFailed.text"),
-                                            new Object[] {pmt.getStepNo(), nv[0], "Request"});
-                        }
-                        LOGGER4J.warn(comments);
-                        pmt.addComments(comments);
+                        comments =
+                                java.text.MessageFormat.format(
+                                        bundle.getString("FetchResponseVal.getTokenFailed.text"),
+                                        new Object[] {
+                                            pmt.getStepNo(),
+                                            name,
+                                            "No matched regex[" + av.getRegexTrackValFrom() + "]",
+                                            "Request"
+                                        });
                     }
+                    LOGGER4J.warn(comments);
+                    pmt.addComments(comments);
                 }
             }
         }
@@ -758,8 +1036,8 @@ class FetchResponseVal implements DeepClone {
     boolean urlmatch(AppValue av, String url) {
 
         try {
-            if (av.getPattern_resURL() != null) {
-                Matcher matcher = av.getPattern_resURL().matcher(url);
+            if (av.getPattern_regexTrackURLFrom() != null) {
+                Matcher matcher = av.getPattern_regexTrackURLFrom().matcher(url);
                 if (matcher.find()) {
                     // printlog("*****FETCHRESPONSE URL match:" + url);
                     LOGGER4J.debug(" FETCH RESPONSE URL matched:[" + url + "]");
@@ -770,7 +1048,7 @@ class FetchResponseVal implements DeepClone {
 
             }
         } catch (Exception e) {
-            printlog("matcher例外：" + e.toString());
+            printlog("matcher exception：" + e.toString());
         }
         return false;
     }
@@ -785,7 +1063,7 @@ class FetchResponseVal implements DeepClone {
             nobj.trackkeys = this.trackkeys.clone();
             return nobj;
         } catch (CloneNotSupportedException ex) {
-            Logger.getLogger(FetchResponseVal.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER4J.error(ex.getMessage(), ex);
         }
         return nobj;
     }

@@ -1,6 +1,6 @@
 import org.zaproxy.gradle.addon.AddOnStatus
 
-version = "1.2.5"
+version = "1.2.6"
 description = "RequestRecorder for ZAP"
 
 tasks.withType<JavaCompile> {

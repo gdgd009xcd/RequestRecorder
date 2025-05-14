@@ -1200,9 +1200,13 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
             
 
         pmt.updateAppParmsIniAndClearCache(null);
-        CustomTrackingParamterConfigMain top = new CustomTrackingParamterConfigMain(this, Dialog.ModalityType.DOCUMENT_MODAL ,pmt, new ParmGenGSONSaveV2(this.getParmGenMacroTraceProvider(),
-                    messages)
-                    );
+        CustomTrackingParamterConfigMain top = new CustomTrackingParamterConfigMain(
+                this,
+                Dialog.ModalityType.DOCUMENT_MODAL,
+                pmt,
+                new ParmGenGSONSaveV2(this.getParmGenMacroTraceProvider()),
+                messages
+        );
 
 
         top.VisibleWhenJSONSaved(this);
@@ -1421,7 +1425,7 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
 
         String choosedFileName = null;
         if (mergedPRequestResponseList != null && !mergedPRequestResponseList.isEmpty()) {
-            if (!EnvironmentVariables.isFileHasBeenSavedOnce()) {
+            if (!EnvironmentVariables.isSaved()) {
                 if ((choosedFileName = EnvironmentVariables.saveMacroBuilderJSONFileChooser(this)) == null){
                     return;
                 }
@@ -1602,7 +1606,7 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                                     break;
                             }
 
-                            apv.setValPartExported(valtype);
+                            apv.setHttpSectionTypeEmbedToExported(valtype);
                             apv.clearNoCountExported();
                             apv.setCsvpos(-1);
                             // (?:[&=?]+|^)token=(value)
@@ -1617,7 +1621,7 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                                 paramname = _QToken.getKey().getName();
                             }
 
-                            apv.setUrlEncode(true);//www-form-urlencoded default
+                            apv.setUrlEncode(true); // www-form-urlencoded default
 
                             String regex = "(?:[&=?]|^)" + ParmGenUtil.escapeRegexChars(paramname) + "=([^&=\\r\\n ;#]+)";//default regex. It may be necessary to set the embedding token value length.
                             switch (rptype) {
@@ -1667,12 +1671,12 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                             }
                             apv.setURLencodedVal(encodedregex);
                             //apv.setresURL(".*" + restoken.request.getPath() + ".*");
-                            apv.setResURLExported(".*");//TrackFrom any URL
-                            apv.setresRegexURLencoded("");
-                            int resvalpart = AppValue.V_AUTOTRACKBODY;
+                            apv.setRegexTrackURLFromExported(".*");//TrackFrom any URL
+                            apv.setResRegexURLencoded("");
+                            AppValue.HttpSectionTypes httpSectionTypeTrackFrom = AppValue.HttpSectionTypes.ResponseBody;
                             switch (_RToken.getTokenKey().getTokenType()) {
                                 case LOCATION:
-                                    resvalpart = AppValue.V_HEADER;
+                                    httpSectionTypeTrackFrom = AppValue.HttpSectionTypes.Header;
                                     break;
                                 case XCSRF:
                                     break;
@@ -1680,15 +1684,15 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                                     break;
 
                             }
-                            apv.setResPartTypeExported(apv.getValPart(resvalpart));
-                            apv.setResRegexPos(_RToken.getTokenKey().getFcnt());
-                            apv.setToken(token);
+                            apv.setHttpSectionTypeTrackFrom(httpSectionTypeTrackFrom);
+                            apv.setPositionTrackFrom(_RToken.getTokenKey().getFcnt());
+                            apv.setParamNameTrackFrom(token);
 
 
                             apv.setFromStepNo(-1);
 
                             apv.setToStepNo(EnvironmentVariables.TOSTEPANY);
-                            apv.setTokenType(_RToken.getTokenKey().getTokenType());
+                            apv.setTokenTypeTrackFrom(_RToken.getTokenKey().getTokenType());
                             apv.setEnabledExported(_RToken.isEnabled());
                             aparms.addAppValue(apv);
                         }
@@ -1711,7 +1715,7 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                     //### skip start
                     // extract parameter and it's value from response body.
                     ParmGenParser pgparser = new ParmGenParser(body);
-                    ArrayList<ParmGenToken> bodytklist = pgparser.getNameValues();
+                    List<ParmGenToken> bodytklist = pgparser.getNameValues();
                     ParmGenArrayList tklist = new ParmGenArrayList();// tklist: tracking token list
                     ParmGenResTokenCollections trackurltoken = new ParmGenResTokenCollections();
                     //trackurltoken.request = pqrs.request;
@@ -2125,11 +2129,7 @@ public class MacroBuilderUI extends javax.swing.JPanel implements  InterfaceParm
                 decodeMenuItem.setEnabled(false);
                 copyMenuItem.setEnabled(false);
             }
-            if (ZapUtil.hasSystemClipBoardString()){
-                pasteMenuItem.setEnabled(true);
-            } else {
-                pasteMenuItem.setEnabled(false);
-            }
+            pasteMenuItem.setEnabled(ZapUtil.hasSystemClipBoardString());
             LOGGER4J.debug("selection start=" + startPos + " end=" + endPos);
             RequestEdit.show(evt.getComponent(), evt.getX(), evt.getY());
         }

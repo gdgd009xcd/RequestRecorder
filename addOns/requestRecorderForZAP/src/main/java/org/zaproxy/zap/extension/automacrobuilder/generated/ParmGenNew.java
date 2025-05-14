@@ -25,7 +25,7 @@ import org.zaproxy.zap.extension.automacrobuilder.zap.ZapUtil;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, InterfaceParmGenWin {
     
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     
@@ -96,7 +96,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         ParamTableModels[P_CSVMODEL] = (DefaultTableModel)csvParamTable.getModel();
         ParamTableModels[P_TRACKMODEL] = (DefaultTableModel)trackTable.getModel();
         addJComboBoxToJTable();
-        PRequestResponse mess = ParmGenGSONSaveV2.proxy_messages.get(0);
+        PRequestResponse mess = getSelectedMessagesInstance().getChoosedMessage();
         String _url = mess.request.getURL();
         selected_requestURL.setText(_url);
         ZapUtil.SwingInvokeLaterIfNeeded(new Runnable() {
@@ -136,7 +136,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             addrec = rec;
             CSVrewind.setSelected(true);
             NumberRewind.setSelected(true);
-            if (ParmGenGSONSaveV2.proxy_messages.size() > 1) {
+            if (getSelectedMessagesInstance().getSelectedMessageListSize() > 1) {
                 current_model = P_TRACKMODEL;
             }
         }
@@ -213,10 +213,18 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
     }
     private void addJComboBoxToJTable(){
         //setup comboBox
-        JComboBox<String> cb = new JComboBox<>(AppValue.makeTargetRequestParamTypes());
+        AppValue.HttpSectionTypes embedToTypes[] = {
+                AppValue.HttpSectionTypes.Path,
+                AppValue.HttpSectionTypes.Query,
+                AppValue.HttpSectionTypes.Header,
+                AppValue.HttpSectionTypes.Body,
+        };
+
+        JComboBox<AppValue.HttpSectionTypes> cb = new JComboBox<>(embedToTypes);
         DefaultCellEditor dce = new DefaultCellEditor(cb);
-        nParamTable. getColumnModel().getColumn(0).setCellEditor(dce);
+        nParamTable.getColumnModel().getColumn(0).setCellEditor(dce);
         trackTable.getColumnModel().getColumn(0).setCellEditor(dce);
+        csvParamTable.getColumnModel().getColumn(0).setCellEditor(dce);
 
         //initialize models
         for(int i = 0; i < ParamTableModels.length; i++){
@@ -250,9 +258,9 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         updateTableRowRegex(regex);
     }
 
-    public void addParamToSelectedModel(String reqplace, String name, int ni, String value, boolean target_req_isformdata, boolean islastparam){
+    public void addParamToSelectedModel(AppValue.HttpSectionTypes httpSectionTypesEmbedTo, ParmGenAddParms.OptTypes optTypes, String name, int ni, String value, boolean target_req_isformdata, boolean islastparam){
         current_model_selected = true;
-        addParam(current_model, reqplace, name, ni, value, target_req_isformdata, islastparam);
+        addParam(current_model, httpSectionTypesEmbedTo, optTypes, name, ni, value, target_req_isformdata, islastparam);
     }
 
     /**
@@ -260,7 +268,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
      * @param panelno
      */
     public void updateMessageAreaInSelectedModel(int panelno){
-        PRequestResponse rs = ParmGenGSONSaveV2.selected_messages.get(0);
+        PRequestResponse rs = getSelectedMessagesInstance().getChoosedMessage();
         if(panelno==-1){
             panelno = current_reqrespanel;
         }
@@ -269,17 +277,29 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
 
         switch(panelno){
             case P_REQUESTTAB:
-                EnvironmentVariables.session.put(ParmGenSession.K_REQUESTURLREGEX, TargetURLRegex);
+                EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                        TemporaryValueStorage.Keys.K_REQUESTURLREGEX,
+                        TemporaryValueStorage.Keys.Class_K_REQUESTURLREGEX,
+                        TargetURLRegex);
                 selected_requestURL.setText(rs.request.getURL());
-                EnvironmentVariables.session.put(ParmGenSession.K_HEADERLENGTH, Integer.toString(rs.request.getHeaderLength()));
+                EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                        TemporaryValueStorage.Keys.K_HEADERLENGTH,
+                        TemporaryValueStorage.Keys.Class_K_HEADERLENGTH,
+                        Integer.toString(rs.request.getHeaderLength()));
                 // RequestArea.setText(rs.request.getMessage());
                 JTextPaneContents reqdoc = new JTextPaneContents(RequestArea);
                 reqdoc.setRequestChunks(rs.request);
                 RequestArea.setCaretPosition(0);
                 break;
             case P_RESPONSETAB:
-                EnvironmentVariables.session.put(ParmGenSession.K_RESPONSEURLREGEX, TargetURLRegex);
-                EnvironmentVariables.session.put(ParmGenSession.K_HEADERLENGTH, Integer.toString(rs.response.getHeaderLength()));
+                EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                        TemporaryValueStorage.Keys.K_RESPONSEURLREGEX,
+                        TemporaryValueStorage.Keys.Class_K_RESPONSEURLREGEX,
+                        TargetURLRegex);
+                EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                        TemporaryValueStorage.Keys.K_HEADERLENGTH,
+                        TemporaryValueStorage.Keys.Class_K_HEADERLENGTH,
+                        Integer.toString(rs.response.getHeaderLength()));
                 selected_responseURL.setText(rs.request.getURL());
                 // ResponseArea.setText(rs.response.getMessage());
                 JTextPaneContents resdoc = new JTextPaneContents(ResponseArea);
@@ -292,18 +312,15 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         }
     }
 
-    private void addParam(int m, String reqplace, String name, int ni, String value, boolean target_req_isformdata, boolean islastparam){
+    private void addParam(int m, AppValue.HttpSectionTypes httpSectionTypeEmbedTo, ParmGenAddParms.OptTypes optType, String name, int ni, String value, boolean target_req_isformdata, boolean islastparam){
         DefaultTableModel model = ParamTableModels[m];
         // set default regex for "name=value"
         String nval =  (name!=null?("(?:[&=?]|^)" + name + "="):"") + value;
-        String _reqplace = reqplace;
-        if ( reqplace.toLowerCase().equals("formdata")){
+        if (target_req_isformdata){
             //nval = "(?:[A-Z].* name=\"" + ParmGenUtil.escapeRegexChars(name) + "\".*(?:\\r|\\n|\\r\\n))(?:[A-Z].*(?:\\r|\\n|\\r\\n)){0,}(?:\\r|\\n|\\r\\n)(?:.*?)" + value + "(?:.*?)(?:\\r|\\n|\\r\\n)";
             nval = "(?:[A-Z].* name=\"" + ParmGenUtil.escapeRegexChars(name) + "\".*(?:\\r|\\n|\\r\\n))(?:[A-Z].*(?:\\r|\\n|\\r\\n)){0,}(?:\\r|\\n|\\r\\n)(?:.*?)" + value ;
-
-            _reqplace = "body";
-        }else if(reqplace.toLowerCase().equals("json")){
-            PRequestResponse selected_message = ParmGenGSONSaveV2.selected_messages.get(0);
+        }else if(optType == ParmGenAddParms.OptTypes.Json){
+            PRequestResponse selected_message = getSelectedMessagesInstance().getChoosedMessage();
             PRequest request = selected_message.request;
             String regex = "\"" + name + "\"(?:[\\t \\r\\n]*):(?:[\\t\\[\\r\\n ]*)\"(.+?)\"(?:[\\t \\]\\r\\n]*)(?:,|})";
             List<String> jsonmatchlist = ParmGenUtil.getRegexMatchGroups(regex, request.getBodyStringWithoutHeader());
@@ -322,14 +339,15 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                 }
             }
             nval = regex;
-            _reqplace = "body";
         }
         Object []row = null;
         boolean urlencode = false;
         AppValue ap = new AppValue();
 
         String tkname = "";
-        String responseURLregex = EnvironmentVariables.session.get(ParmGenSession.K_RESPONSEURLREGEX);
+        String responseURLregex = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                TemporaryValueStorage.Keys.K_RESPONSEURLREGEX,
+                TemporaryValueStorage.Keys.Class_K_RESPONSEURLREGEX);
         String frompos = TrackFrom.getText();
         int fromnum = -1;
         if(frompos!=null&&!frompos.isEmpty()){
@@ -345,54 +363,125 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         }
         switch(m){
             case P_NUMBERMODEL:
-                row = new Object[]{_reqplace, false, nval, islastparam};
+                row = new Object[]{httpSectionTypeEmbedTo, false, nval, islastparam};
                 break;
             case P_CSVMODEL:
-                row = new Object[]{_reqplace, false, Integer.parseInt(EnvironmentVariables.session.get(ni, ParmGenSession.K_COLUMN)), nval, islastparam};
+                row = new Object[]{
+                        httpSectionTypeEmbedTo,
+                        false,
+                        Integer.parseInt(EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                ni,
+                                TemporaryValueStorage.Keys.K_COLUMN,
+                                TemporaryValueStorage.Keys.Class_K_COLUMN)),
+                        nval,
+                        islastparam};
                 break;
             case P_TRACKMODEL:
-                if(EnvironmentVariables.session.get(0, ParmGenSession.K_TOKEN)==null){
+                if(EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                        0,
+                        TemporaryValueStorage.Keys.K_TOKEN,
+                        TemporaryValueStorage.Keys.Class_K_TOKEN
+                ) == null) {
                     urlencode = false;
-                    if(target_req_isformdata!=true){
-                        if(Boolean.parseBoolean(EnvironmentVariables.session.get(ParmGenSession.K_URLENCODE))==true){
+                    if (!target_req_isformdata){
+                        if(Boolean.parseBoolean(
+                                EnvironmentVariables
+                                        .getTemporaryValueStorageInstance()
+                                        .get(
+                                                TemporaryValueStorage.Keys.K_URLENCODE,
+                                                TemporaryValueStorage.Keys.Class_K_URLENCODE
+                                        ))==true){
                             // target request  which will set tracking parameter is not form-data and source of tracking parameter is request body.
                             urlencode = true;
                         }
                     }
-                    tkname = EnvironmentVariables.session.get(ParmGenSession.K_TOKEN);
+                    tkname = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                            TemporaryValueStorage.Keys.K_TOKEN,
+                            TemporaryValueStorage.Keys.Class_K_TOKEN);
                     if(tkname==null||tkname.isEmpty()){
                         tkname = name;
                     }
-                    row = new Object[]{_reqplace, false, nval,
-                    responseURLregex,
-                    EnvironmentVariables.session.get(ParmGenSession.K_RESPONSEREGEX),
-                    EnvironmentVariables.session.get(ParmGenSession.K_RESPONSEPART),
-                    EnvironmentVariables.session.get(ParmGenSession.K_RESPONSEPOSITION),
-                    tkname,
-                    urlencode,"*","*", EnvironmentVariables.session.get(ParmGenSession.K_TOKENTYPE),
-                    "", -1, false, false
+                    row = new Object[] {
+                        httpSectionTypeEmbedTo,
+                        false,
+                        nval,
+                        responseURLregex,
+                        EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                TemporaryValueStorage.Keys.K_RESPONSEREGEX,
+                                TemporaryValueStorage.Keys.Class_K_RESPONSEREGEX
+                        ),
+                        EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                TemporaryValueStorage.Keys.K_RESPONSEPART,
+                                TemporaryValueStorage.Keys.Class_K_RESPONSEPART
+                        ),
+                        EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                TemporaryValueStorage.Keys.K_RESPONSEPOSITION,
+                                TemporaryValueStorage.Keys.Class_K_RESPONSEPOSITION
+                        ),
+                        tkname,
+                        urlencode,
+                            "*",
+                            "*",
+                            EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                    TemporaryValueStorage.Keys.K_TOKENTYPE,
+                                    TemporaryValueStorage.Keys.Class_K_TOKENTYPE),
+                        "",
+                            -1,
+                            false,
+                            false
                     };
-                }else{
+                } else {
                     String _token;
-                    if((_token= EnvironmentVariables.session.get(ni, ParmGenSession.K_TOKEN))!=null){
+                    if ((_token = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                            ni,
+                            TemporaryValueStorage.Keys.K_TOKEN,
+                            TemporaryValueStorage.Keys.Class_K_TOKEN
+                            )) != null) {
                         urlencode = false;
-                        if(target_req_isformdata!=true){
-                            if(Boolean.parseBoolean(EnvironmentVariables.session.get(ni, ParmGenSession.K_URLENCODE))==true){
+                        if (!target_req_isformdata) {
+                            if(Boolean.parseBoolean(EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                    ni,
+                                    TemporaryValueStorage.Keys.K_URLENCODE,
+                                    TemporaryValueStorage.Keys.Class_K_URLENCODE))) {
                                 urlencode = true;
                             }
                         }
-                        tkname = EnvironmentVariables.session.get(ni, ParmGenSession.K_TOKEN);
-                        if(tkname==null||tkname.isEmpty()){
+                        tkname = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                ni,
+                                TemporaryValueStorage.Keys.K_TOKEN,
+                                TemporaryValueStorage.Keys.Class_K_TOKEN);
+                        if (tkname==null || tkname.isEmpty()) {
                             tkname = name;
                         }
-                        row = new Object[]{_reqplace, false, nval,
-                        responseURLregex,
-                        EnvironmentVariables.session.get(ni, ParmGenSession.K_RESPONSEREGEX),
-                        EnvironmentVariables.session.get(ni, ParmGenSession.K_RESPONSEPART),
-                        EnvironmentVariables.session.get(ni, ParmGenSession.K_RESPONSEPOSITION),
-                        tkname,
-                        urlencode,"*","*", EnvironmentVariables.session.get(ni, ParmGenSession.K_TOKENTYPE),
-                        "", -1, false, false
+                        row = new Object[] {
+                            httpSectionTypeEmbedTo,
+                            false,
+                            nval,
+                            responseURLregex,
+                            EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                    ni,
+                                    TemporaryValueStorage.Keys.K_RESPONSEREGEX,
+                                    TemporaryValueStorage.Keys.Class_K_RESPONSEREGEX),
+                            EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                    ni,
+                                    TemporaryValueStorage.Keys.K_RESPONSEPART,
+                                    TemporaryValueStorage.Keys.Class_K_RESPONSEPART),
+                            EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                    ni,
+                                    TemporaryValueStorage.Keys.K_RESPONSEPOSITION,
+                                    TemporaryValueStorage.Keys.Class_K_RESPONSEPOSITION),
+                            tkname,
+                            urlencode,
+                                "*",
+                                "*",
+                                EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                                        ni,
+                                        TemporaryValueStorage.Keys.K_TOKENTYPE,
+                                        TemporaryValueStorage.Keys.Class_K_TOKENTYPE),
+                            "",
+                                -1,
+                                false,
+                                false
                         };
                     }
                 }
@@ -690,14 +779,15 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                 {null, null, null, null},
                 {null, null, null, null}
             },
-            new String [] {
+            new String [] { // column titles
                 "", "", "", ""
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Boolean.class, java.lang.String.class, java.lang.Boolean.class
+                AppValue.HttpSectionTypes.class, java.lang.Boolean.class, java.lang.String.class, java.lang.Boolean.class
             };
 
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
@@ -972,14 +1062,15 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                 {null, null, null, null, null},
                 {null, null, null, null, null}
             },
-            new String [] {
-                "置換位置", "置換しない", "ＣＳＶカラム", "置換パターン", "インクリメント"
+            new String [] { // column titles
+                "Part", "Nop", "Csv Column", "RequestParam(Regex)", "Increment"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Object.class, java.lang.Boolean.class
+                AppValue.HttpSectionTypes.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Object.class, java.lang.Boolean.class
             };
 
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
@@ -1144,13 +1235,29 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                 {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "", "置換しない", "", "追跡URL", "", "", "追跡位置", "追跡NAME値", "URLencodeする", "", "", "", "", "", "", ""
+                "", "NOP", "", "URL", "", "", "position", "name", "URLencode", "", "", "", "", "", "", ""
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Boolean.class, java.lang.Boolean.class
+                AppValue.HttpSectionTypes.class, // 0
+                    java.lang.Boolean.class, // 1
+                    java.lang.String.class, // 2
+                    java.lang.String.class, // 3
+                    java.lang.String.class, // 4
+                    AppValue.HttpSectionTypes.class, // 5
+                    java.lang.String.class, // 6
+                    java.lang.String.class, // 7
+                    java.lang.Boolean.class,// 8
+                    java.lang.String.class, // 9
+                    java.lang.String.class, // 10
+                    AppValue.TokenTypeNames.class, // 11
+                    java.lang.String.class, // 12
+                    java.lang.Integer.class, // 13
+                    java.lang.Boolean.class, // 14
+                    java.lang.Boolean.class  // 15
             };
 
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
@@ -1168,20 +1275,20 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         jScrollPane6.setViewportView(trackTable);
         if (trackTable.getColumnModel().getColumnCount() > 0) {
             trackTable.getColumnModel().getColumn(0).setPreferredWidth(60);
-            trackTable.getColumnModel().getColumn(0).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title0.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(0).setHeaderValue(bundle.getString("ParmGenNew.trackTable.part.text")); // NOI18N
             trackTable.getColumnModel().getColumn(1).setPreferredWidth(60);
-            trackTable.getColumnModel().getColumn(1).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title1.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(1).setHeaderValue(bundle.getString("ParmGenNew.trackTable.noOperation.text")); // NOI18N
             trackTable.getColumnModel().getColumn(2).setPreferredWidth(150);
-            trackTable.getColumnModel().getColumn(2).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title2.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(3).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title3.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(4).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title4.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(5).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title5.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(6).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title6.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(7).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title7.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(8).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title8.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(9).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title9.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(10).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title10.text")); // NOI18N
-            trackTable.getColumnModel().getColumn(11).setHeaderValue(bundle.getString("ParmGenNew.trackTable.title11.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(2).setHeaderValue(bundle.getString("ParmGenNew.trackTable.regexEmbedValTo.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(3).setHeaderValue(bundle.getString("ParmGenNew.trackTable.regexTrackURLFrom.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(4).setHeaderValue(bundle.getString("ParmGenNew.trackTable.regexTrackValFrom.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(5).setHeaderValue(bundle.getString("ParmGenNew.trackTable.partTrackFrom.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(6).setHeaderValue(bundle.getString("ParmGenNew.trackTable.positionTrackFrom.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(7).setHeaderValue(bundle.getString("ParmGenNew.trackTable.paramNameTrackFrom.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(8).setHeaderValue(bundle.getString("ParmGenNew.trackTable.urlEncoded.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(9).setHeaderValue(bundle.getString("ParmGenNew.trackTable.fromStepNo.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(10).setHeaderValue(bundle.getString("ParmGenNew.trackTable.toStepNo.text")); // NOI18N
+            trackTable.getColumnModel().getColumn(11).setHeaderValue(bundle.getString("ParmGenNew.trackTable.trackValueType.text")); // NOI18N
             trackTable.getColumnModel().getColumn(12).setHeaderValue(bundle.getString("ParmGenNew.trackTable.condRegex.text")); // NOI18N
             trackTable.getColumnModel().getColumn(13).setHeaderValue(bundle.getString("ParmGenNew.trackTable.condTargetNo.text")); // NOI18N
             trackTable.getColumnModel().getColumn(14).setHeaderValue(bundle.getString("ParmGenNew.trackTable.condRegexTargetIsRequest.text")); // NOI18N
@@ -1453,7 +1560,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             }
         }
         // clea sessions
-        EnvironmentVariables.session.clear();
+        EnvironmentVariables.getTemporaryValueStorageInstance().clear();
         ParmGenCSVLoader csvloader = ParmGenCSVLoader.newInstance(this,csvFilePath.getText());
         if(csvloader.readOneLine()){
             csvloader.setVisible(true);
@@ -1478,8 +1585,8 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             }
         }
         // clear sessions
-        EnvironmentVariables.session.clear();
-        SelectRequest.newInstance(bundle.getString("ParmGenNew.SelectResponseDialogTitle.text"), this, ParmGenAutoTrack.newInstance(this), ParmGenNew.P_RESPONSETAB).setVisible(true);
+        EnvironmentVariables.getTemporaryValueStorageInstance().clear();
+        RequestResponseSelector.newInstance(bundle.getString("ParmGenNew.SelectResponseDialogTitle.text"), this, ParsedRequestResponseTracker.newInstance(this), ParmGenNew.P_RESPONSETAB).setVisible(true);
     }//GEN-LAST:event_nParamAdd4ActionPerformed
 
     private void numberTargetURLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_numberTargetURLActionPerformed
@@ -1501,7 +1608,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
 
     private void RequestSelectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RequestSelectBtnActionPerformed
         // TODO add your handling code here:
-        SelectRequest.newInstance(bundle.getString("ParmGenNew.SelectRequestDialogTitle.text"), this, null, -1).setVisible(true);
+        RequestResponseSelector.newInstance(bundle.getString("ParmGenNew.SelectRequestDialogTitle.text"), this, null, -1).setVisible(true);
     }//GEN-LAST:event_RequestSelectBtnActionPerformed
 
     private void SaveParmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParmActionPerformed
@@ -1536,7 +1643,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             case P_CSVMODEL:
                 rec.setTypeValFromString(AppParmsIni.T_CSV_NAME);
                 rec.setUrl(csvTargetURL.getText());
-                rec.crtFrl(csvFilePath.getText(), true);
+                rec.crtFrl(csvFilePath.getText());
                 if(CSVrewind.isSelected()){
                     rec.setIniVal(ParmGenUtil.parseMinInt(CSVSkipLine.getText()));
                     rec.updateCurrentValue(rec.getIniVal());
@@ -1573,30 +1680,30 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         int rcnt = model.getRowCount();
         rec.clearAppValues();
         for(int i = 0 ; i < rcnt; i++){
-            String type = (String)model.getValueAt(i, 0);
-            boolean nomodify = Boolean.parseBoolean(model.getValueAt(i, 1).toString());
-            String value;AppValue app = null;
+            AppValue.HttpSectionTypes httpSectionTypeEmbedTo = (AppValue.HttpSectionTypes)model.getValueAt(i, 0);
+            boolean noOperation = (boolean)model.getValueAt(i, 1);
+            String regexEmbedValTo;AppValue app = null;
             boolean increment;
             switch(current_model){
                 case P_NUMBERMODEL:
-                    value = (String)model.getValueAt(i, 2);
-                    increment = Boolean.parseBoolean(model.getValueAt(i,3).toString());
-                    app = new AppValue(type, nomodify, value, increment);
+                    regexEmbedValTo = (String)model.getValueAt(i, 2);
+                    increment = (boolean)model.getValueAt(i,3);
+                    app = new AppValue(httpSectionTypeEmbedTo, noOperation, regexEmbedValTo, increment);
                     break;
                 case P_CSVMODEL:
                     int csvpos = Integer.parseInt(model.getValueAt(i, 2).toString());
-                    value = (String)model.getValueAt(i, 3);
-                    increment = Boolean.parseBoolean(model.getValueAt(i,4).toString());
-                    app = new AppValue(type, nomodify, csvpos, value, increment);
+                    regexEmbedValTo = (String)model.getValueAt(i, 3);
+                    increment = (boolean)model.getValueAt(i,4);
+                    app = new AppValue(httpSectionTypeEmbedTo, noOperation, csvpos, regexEmbedValTo, increment);
                     break;
                 case P_TRACKMODEL:
-                    value = (String)model.getValueAt(i, 2);
-                    String _resURL = (String)model.getValueAt(i, 3);
-                    String _resRegex = (String)model.getValueAt(i, 4);
-                    String _resPartType = (String)model.getValueAt(i, 5);
-                    String _resRegexPos = (String)model.getValueAt(i, 6);
-                    String _token = (String)model.getValueAt(i, 7);
-                    boolean _trackreq = Boolean.parseBoolean(model.getValueAt(i, 8).toString());
+                    regexEmbedValTo = (String)model.getValueAt(i, 2);
+                    String regexTrackURLFrom = (String)model.getValueAt(i, 3);
+                    String regexTrackValFrom = (String)model.getValueAt(i, 4);
+                    AppValue.HttpSectionTypes httpSectionTypeTrackFrom = (AppValue.HttpSectionTypes)model.getValueAt(i, 5);
+                    String positionTrackFrom = (String)model.getValueAt(i, 6);
+                    String paramNameTrackFrom = (String)model.getValueAt(i, 7);
+                    boolean urlEncoded = (boolean)model.getValueAt(i, 8);
                     int fromStepNo = -1;
                     try{
                         fromStepNo = Integer.parseInt((String)model.getValueAt(i, 9));
@@ -1611,7 +1718,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                     }
                     if(toStepNo<0) toStepNo = EnvironmentVariables.TOSTEPANY;
 
-                    String tktypename = (String)model.getValueAt(i, 11);
+                    AppValue.TokenTypeNames trackValueType = (AppValue.TokenTypeNames)model.getValueAt(i, 11);
 
                     String condRegex = (String)model.getValueAt(i, 12);
                     
@@ -1621,31 +1728,28 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
                     } catch (NumberFormatException e) {
                     }
 
-                    boolean condRegexTargetIsRequest = Boolean.parseBoolean(model.getValueAt(i, 14).toString());
-                    boolean replaceZeroSize = Boolean.parseBoolean(model.getValueAt(i, 15).toString());
+                    boolean condRegexTargetIsRequest = (boolean)model.getValueAt(i, 14);
+                    boolean replaceZeroSize = (boolean)model.getValueAt(i, 15);
                     app = new AppValue(
-                            type, 
-                            nomodify, 
-                            value,
-                            _resURL,
-                            _resRegex,
-                            _resPartType,
-                            _resRegexPos,
-                            _token,
-                            _trackreq,
+                            httpSectionTypeEmbedTo,
+                            noOperation,
+                            regexEmbedValTo,
+                            regexTrackURLFrom,
+                            regexTrackValFrom,
+                            httpSectionTypeTrackFrom,
+                            positionTrackFrom,
+                            paramNameTrackFrom,
+                            urlEncoded,
                             fromStepNo,
                             toStepNo,
-                            tktypename,
+                            trackValueType,
                             condRegex,
                             condTargetNo,
                             condRegexTargetIsRequest,
                             replaceZeroSize);
                     break;
-                case P_RANDOMMODEL:
-                    value = (String)model.getValueAt(i, 2);
-                    break;
                 default:
-                    value = (String)model.getValueAt(i, 2);
+                    regexEmbedValTo = (String)model.getValueAt(i, 2);
                     break;
             }
            if(app!=null)rec.addAppValue(app);
@@ -1671,7 +1775,7 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             }
         }
         //　clear session paramters
-        EnvironmentVariables.session.clear();
+        EnvironmentVariables.getTemporaryValueStorageInstance().clear();
         ParmGenAddParms.newInstance(this, false).setVisible(true);
     }//GEN-LAST:event_nParamAddActionPerformed
 
@@ -1841,9 +1945,9 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
             if (colsSelected.length > 0){
                 if(colsSelected[0] > 2 && colsSelected[0] < 12){
                     current_tablecolidx = 4;
-                    String _resPartType = (String)ParamTableModels[current_model].getValueAt(current_tablerowidx, 5);
-                    int parttype = AppValue.parseValPartType(_resPartType);
-                    if (parttype == AppValue.V_AUTOTRACKBODY) {
+                    AppValue.HttpSectionTypes httpSectionTypeTrackFrom = (AppValue.HttpSectionTypes)ParamTableModels[current_model].getValueAt(current_tablerowidx, 5);
+                    if (httpSectionTypeTrackFrom == AppValue.HttpSectionTypes.ResponseBody
+                            || httpSectionTypeTrackFrom == AppValue.HttpSectionTypes.Response) {
                         showrequest = false;
                     } else {
                         showrequest = true;
@@ -1987,9 +2091,9 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
         if (rowsSelected.length > 0){
             current_tablerowidx = rowsSelected[0];
             current_tablecolidx = 4;
-            String _resPartType = (String)ParamTableModels[current_model].getValueAt(current_tablerowidx, 5);
-            int parttype = AppValue.parseValPartType(_resPartType);
-            if (parttype == AppValue.V_AUTOTRACKBODY) {
+            AppValue.HttpSectionTypes httpSectionTypeTrackFrom = (AppValue.HttpSectionTypes)ParamTableModels[current_model].getValueAt(current_tablerowidx, 5);
+            if (httpSectionTypeTrackFrom == AppValue.HttpSectionTypes.ResponseBody
+                    || httpSectionTypeTrackFrom == AppValue.HttpSectionTypes.Response) {
                 showrequest = false;
             } else {
                 showrequest = true;
@@ -2097,6 +2201,10 @@ public class ParmGenNew extends javax.swing.JFrame implements InterfaceRegex, in
 
     @Override
     public PRequestResponse getOriginalRequestResponse() {
-        return ParmGenGSONSaveV2.selected_messages.get(0);
+        return getSelectedMessagesInstance().getChoosedMessage();
+    }
+
+    public SelectedMessages getSelectedMessagesInstance() {
+        return this.parentwin.getSelectedMessagesInstance();
     }
 }

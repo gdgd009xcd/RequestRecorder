@@ -13,24 +13,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
-import org.zaproxy.zap.extension.automacrobuilder.InterfaceRegex;
-import org.zaproxy.zap.extension.automacrobuilder.PRequestResponse;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenGSONSaveV2;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenSession;
-import org.zaproxy.zap.extension.automacrobuilder.view.JTextPaneContents;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenUtil;
-import org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables;
-import org.zaproxy.zap.extension.automacrobuilder.StrSelectInfo;
-import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
 
+import org.zaproxy.zap.extension.automacrobuilder.*;
+import org.zaproxy.zap.extension.automacrobuilder.view.JTextPaneContents;
 
 
 /**
  *
  * @author gdgd009xcd
  */
+@Deprecated
 @SuppressWarnings("serial")
-public class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, interfaceParmGenWin {
+public class ResponseTracker extends javax.swing.JFrame implements InterfaceRegex, InterfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
 
@@ -545,16 +539,25 @@ public class ResponseTracker extends javax.swing.JFrame implements InterfaceRege
     }// </editor-fold>//GEN-END:initComponents
 
     public void update(){
-        if ( ParmGenGSONSaveV2.selected_messages.size()>0){
-            PRequestResponse rs = ParmGenGSONSaveV2.selected_messages.get(0);
+        if ( getSelectedMessagesInstance().getChoosedMessageListSize() > 0){
+            PRequestResponse rs = getSelectedMessagesInstance().getChoosedMessage();
             currentrequestresponse = rs;
             ResponseURL.setText(rs.request.getURL());
             JTextPaneContents rdoc = new JTextPaneContents(ResponseArea);
             rdoc.setResponseChunks(rs.response);
             ResponseArea.setCaretPosition(0);   
-            headerlength = Integer.parseInt(EnvironmentVariables.session.get(ParmGenSession.K_HEADERLENGTH));
+            headerlength = Integer.parseInt(EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                    TemporaryValueStorage.Keys.K_HEADERLENGTH,
+                    TemporaryValueStorage.Keys.Class_K_HEADERLENGTH
+                    ));
         }
     }
+
+    @Override
+    public SelectedMessages getSelectedMessagesInstance() {
+        return this.parentwin.getSelectedMessagesInstance();
+    }
+
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
         dispose();
@@ -679,8 +682,14 @@ public class ResponseTracker extends javax.swing.JFrame implements InterfaceRege
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         if ( currentrequestresponse == null ) return;
-        EnvironmentVariables.session.put(ParmGenSession.K_RESPONSEREGEX, regexpattern);
-        EnvironmentVariables.session.put(ParmGenSession.K_RESPONSEPART, respart);
+        EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                TemporaryValueStorage.Keys.K_RESPONSEREGEX,
+                TemporaryValueStorage.Keys.Class_K_RESPONSEREGEX,
+                regexpattern);
+        EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                TemporaryValueStorage.Keys.K_RESPONSEPART,
+                TemporaryValueStorage.Keys.Class_K_RESPONSEPART,
+                AppValue.HttpSectionTypes.parseString(respart));
        
         int mcnt = ParmGenUtil.getRegexMatchpos(getRegex(), currentrequestresponse.response.getMessage());
         String poscnt = null;
@@ -689,9 +698,12 @@ public class ResponseTracker extends javax.swing.JFrame implements InterfaceRege
             poscnt = Integer.toString(mcnt-1);
         }
         if(poscnt!=null){
-            EnvironmentVariables.session.put(ParmGenSession.K_RESPONSEPOSITION, poscnt);
+            EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                    TemporaryValueStorage.Keys.K_RESPONSEPOSITION,
+                    TemporaryValueStorage.Keys.Class_K_RESPONSEPOSITION,
+                    poscnt);
             dispose();
-            SelectRequest.newInstance(bundle.getString("ResponseTracker.SelectRequestTitle.text"), parentwin, ParmGenAddParms.newInstance(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
+            RequestResponseSelector.newInstance(bundle.getString("ResponseTracker.SelectRequestTitle.text"), parentwin, ParmGenAddParms.newInstance(parentwin, true), ParmGenNew.P_REQUESTTAB).setVisible(true);
         }else{
             JOptionPane.showMessageDialog(this,"<HTML>正規表現に誤りがあります。</HTML>" ,  "正規表現エラー", JOptionPane.ERROR_MESSAGE);
         }

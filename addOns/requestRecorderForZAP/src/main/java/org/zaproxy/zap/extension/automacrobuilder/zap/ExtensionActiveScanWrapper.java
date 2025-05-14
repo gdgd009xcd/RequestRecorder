@@ -76,6 +76,7 @@ public class ExtensionActiveScanWrapper extends ExtensionActiveScan {
                 ScannerParam scannerParam = CastUtils.castToType(o);
                 if (originalScannerParam == null) {
                     originalScannerParam = scannerParam;
+                    // always antiCSRFhandle action. It is non-sense.
                     originalScannerParam.setHandleAntiCSRFTokens(false);
                     resultSpecificObjectList.add(o);
                 } else {

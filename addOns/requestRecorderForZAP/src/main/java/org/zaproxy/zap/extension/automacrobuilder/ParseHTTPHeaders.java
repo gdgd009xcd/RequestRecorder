@@ -547,7 +547,7 @@ class ParseHTTPHeaders implements DeepClone {
         return queryparams;
     }
 
-    public ArrayList<String[]> getBodyParams() {
+    public List<String[]> getBodyParamsFromRequest() {
         if (isrequest == true && bodyparams == null) {
             bodyparams = new ArrayList<String[]>();
             hashbodyparams = new HashMap<String, String>();
@@ -640,6 +640,18 @@ class ParseHTTPHeaders implements DeepClone {
             } //
         }
         return bodyparams;
+    }
+
+    public List<ParmGenToken> getJSONParamList() {
+        String bodyString = getBodyStringWithoutHeader();
+        ParmGenGSONDecoder jdec = new ParmGenGSONDecoder(bodyString);
+        return jdec.parseJSON2Token();
+    }
+
+    public ParmGenToken getJSONParam(String name, int fcnt) {
+        String bodyString = getBodyStringWithoutHeader();
+        ParmGenGSONDecoder jdec = new ParmGenGSONDecoder(bodyString);
+        return jdec.fetchNameValue(name, fcnt, AppValue.TokenTypeNames.JSON);
     }
 
     //
@@ -1133,11 +1145,11 @@ class ParseHTTPHeaders implements DeepClone {
         return hkeyUpper_Headers;
     }
 
-    public String getContent_Type() {
+    public String getContentType() {
         return content_type;
     }
 
-    String getContent_Subtype() {
+    public String getContentSubtype() {
         return content_subtype;
     }
 
@@ -1171,7 +1183,7 @@ class ParseHTTPHeaders implements DeepClone {
     // body parameter same name & value
     @Deprecated
     public boolean hasBodyParam(String pname, String value) {
-        if (getBodyParams() != null) {
+        if (getBodyParamsFromRequest() != null) {
             for (String[] pair : bodyparams) { // bodyparams
                 if (isEqualParam(pname, pair[0]) && isEqualParam(value, pair[1])) return true;
             }
@@ -1181,7 +1193,7 @@ class ParseHTTPHeaders implements DeepClone {
 
     @Deprecated
     public boolean hasBodyParamName(String pname) {
-        if (getBodyParams() != null) {
+        if (getBodyParamsFromRequest() != null) {
             for (String[] pair : bodyparams) { // bodyparams
                 if (isEqualParam(pname, pair[0])) return true;
             }
@@ -1191,7 +1203,7 @@ class ParseHTTPHeaders implements DeepClone {
 
     @Deprecated
     public ParmGenRequestToken getRequestBodyToken(String pname) {
-        if (getBodyParams() != null) {
+        if (getBodyParamsFromRequest() != null) {
             for (String[] pair : bodyparams) { // bodyparams
                 if (isEqualParam(pname, pair[0])) {
                     ParmGenRequestTokenKey.RequestParamType rptype =
@@ -1274,7 +1286,7 @@ class ParseHTTPHeaders implements DeepClone {
                 requestTokens.add(requestToken);
             }
         }
-        if (getBodyParams() != null) {
+        if (getBodyParamsFromRequest() != null) {
             for (String[] pair : bodyparams) { // bodyparams
                 ParmGenRequestTokenKey.RequestParamType rptype =
                         ParmGenRequestTokenKey.RequestParamType.X_www_form_urlencoded;
@@ -1306,7 +1318,7 @@ class ParseHTTPHeaders implements DeepClone {
     @Deprecated
     public String getBodyParamValue(String _name) {
         if (hashbodyparams == null) {
-            getBodyParams();
+            getBodyParamsFromRequest();
         }
         return hashbodyparams.get(_name);
     }
@@ -1390,8 +1402,8 @@ class ParseHTTPHeaders implements DeepClone {
 
     // return Content-Type value : text/html
     public String getContentMimeType() {
-        String res_content_type = getContent_Type();
-        String res_content_subtype = getContent_Subtype();
+        String res_content_type = getContentType();
+        String res_content_subtype = getContentSubtype();
 
         String res_contentMimeType = res_content_type + "/" + res_content_subtype;
 

@@ -64,9 +64,11 @@ public class EnvironmentVariables {
     // Basic username:password(base64 encoded)
     // String ProxyAuth = "Basic Z2RnZDAwOXhjZDpzb3JyeSxwYXNzd29yZCBoYXMgY2hhbmdlZC4=";
     static String ProxyAuth;
-    public static ParmGenSession session;
+    private static TemporaryValueStorage temporaryValueStorage = null;
+
     static int displaylength = 10000; // displayable length in JTextArea/JTextPane
     private static boolean isSaved = false;
+    private static boolean isModified = false;
     static String fileSep = "/"; // maybe unix filesystem.
     public static String Version = ""; // loaded JSON format version
     public static final int TOSTEPANY = 2147483647; // StepTo number means any value
@@ -123,7 +125,7 @@ public class EnvironmentVariables {
         defaultSaveFilePath = projectdir + fileSep + "RequestRecorder.json";
         plog = new PLog(projectdir);
         ProxyAuth = "";
-        session = new ParmGenSession();
+        temporaryValueStorage = new TemporaryValueStorage();
     }
 
     public static boolean isSaved() {
@@ -132,6 +134,14 @@ public class EnvironmentVariables {
 
     public static void Saved(boolean b) {
         isSaved = b;
+    }
+
+    public static boolean isModified() {
+        return isModified;
+    }
+
+    public static void modified(boolean b) {
+        isModified = b;
     }
 
     private static void setRegexPatternExcludeMimeType(List<String> excludeMimeTypes) {
@@ -195,15 +205,6 @@ public class EnvironmentVariables {
     }
 
     /**
-     * Returns true if the file has been saved once.
-     *
-     * @return
-     */
-    public static boolean isFileHasBeenSavedOnce() {
-        return saveFilePathName != null && !saveFilePathName.isEmpty();
-    }
-
-    /**
      * get ZAP resource string
      *
      * @param key
@@ -214,19 +215,13 @@ public class EnvironmentVariables {
     }
 
     /**
-     * update value of savePathName with choosedFilePathName
+     * update value of savePathName with filePath
      *
      * @param filePath
      */
     public static void commitChoosedFile(String filePath) {
-        if (EnvironmentVariables.choosedFilePathName != null
-                && !EnvironmentVariables.choosedFilePathName.isEmpty()
-                && EnvironmentVariables.choosedFilePathName.equals(filePath)) {
-            LOGGER4J.debug(
-                    "commit ChoosedFile[" + choosedFilePathName + "]->[" + saveFilePathName + "]");
-            EnvironmentVariables.saveFilePathName = EnvironmentVariables.choosedFilePathName;
-            EnvironmentVariables.choosedFilePathName = null;
-        }
+        EnvironmentVariables.saveFilePathName = filePath;
+        EnvironmentVariables.choosedFilePathName = null;
     }
 
     /**
@@ -435,5 +430,13 @@ public class EnvironmentVariables {
             return ui;
         }
         return null;
+    }
+
+    public static TemporaryValueStorage getTemporaryValueStorageInstance() {
+        return EnvironmentVariables.temporaryValueStorage;
+    }
+
+    private static void clearSaveFilePathName() {
+        saveFilePathName = null;
     }
 }

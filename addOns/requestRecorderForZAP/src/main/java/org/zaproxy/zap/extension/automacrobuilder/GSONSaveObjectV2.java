@@ -58,12 +58,14 @@ public class GSONSaveObjectV2 {
         public int len;
         public int typeval;
         public int inival;
+        public Integer cntCount;
         public int maxval;
         public String csvname;
+        public long csvSeekIndex;
+        public int csvCurrentRecordNumber;
         public boolean pause;
         public int TrackFromStep;
         public int SetToStep;
-        public String relativecntfilename;
         public Collection<AppValue_List> AppValue_Lists;
 
         AppParmsIni_List() {
@@ -72,20 +74,20 @@ public class GSONSaveObjectV2 {
     }
 
     static class AppValue_List {
-        public String valpart;
+        public AppValue.HttpSectionTypes valpart;
         public boolean isEnabled;
         public boolean isNoCount;
         public int csvpos;
         public String value;
         public String resURL;
         public String resRegex;
-        public String resValpart;
+        public AppValue.HttpSectionTypes resValpart;
         public int resRegexPos;
         public String token;
         public boolean urlencode;
         public int fromStepNo;
         public int toStepNo;
-        public String TokenType;
+        public AppValue.TokenTypeNames tokenType;
         public int condTargetNo;
         public String condRegex;
         public boolean condRegexTargetIsRequest;
