@@ -197,6 +197,24 @@ public class ParmGenGSON implements GsonParserListener {
         return i;
     }
 
+    private Integer GetInteger(GsonParser.EventType ev, Object value, Integer defval) {
+        Integer i = defval;
+        if (value instanceof Number) {
+            Number n = CastUtils.castToType(value);
+            i = n.intValue();
+        }
+        return i;
+    }
+
+    private long GetLong(GsonParser.EventType ev, Object value, long defval) {
+        long i = defval;
+        if (value instanceof Number) {
+            Number n = CastUtils.castToType(value);
+            i = n.longValue();
+        }
+        return i;
+    }
+
     private boolean Getboolean(GsonParser.EventType ev, Object value, boolean defval) {
         boolean b = defval;
         if (value instanceof Boolean) {
@@ -265,7 +283,7 @@ public class ParmGenGSON implements GsonParserListener {
                                         try {
                                             decodedname =
                                                     URLdecodeFromJSONThrows(aparms.getCsvName());
-                                            aparms.crtFrl(decodedname, true);
+                                            aparms.crtFrl(decodedname);
                                         } catch (Exception e) {
                                             logger4j.error(
                                                     "decode failed:[" + aparms.getCsvName() + "]",
@@ -349,8 +367,6 @@ public class ParmGenGSON implements GsonParserListener {
                                     }
                                 }
                                 aparms.setSetToStep(stepno);
-                            } else if (name.equalsIgnoreCase("RELATIVECNTFILENAME")) {
-                                aparms.setRelativeCntFileName(GetString(ev, value, ""));
                             }
                         } else if (current != null) {
                             if (current.equalsIgnoreCase("PREQUESTRESPONSE")
@@ -435,7 +451,7 @@ public class ParmGenGSON implements GsonParserListener {
                                         try {
                                             decodedname =
                                                     URLdecodeFromJSONThrows(aparms.getCsvName());
-                                            aparms.crtFrl(decodedname, true);
+                                            aparms.crtFrl(decodedname);
                                         } catch (Exception e) {
                                             logger4j.error(
                                                     "decode failed:[" + aparms.getCsvName() + "]",
@@ -513,7 +529,8 @@ public class ParmGenGSON implements GsonParserListener {
                     default:
                         if (apv != null) { // v1
                             if (name.equalsIgnoreCase("VALPART")) {
-                                if (!apv.setValPartExported(GetString(ev, value, ""))) {
+                                if (!apv.setHttpSectionTypeEmbedToExported(
+                                        GetString(ev, value, ""))) {
                                     JSONSyntaxErrors.add("VALPART has no value:[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("ISMODIFY")) {
@@ -537,15 +554,15 @@ public class ParmGenGSON implements GsonParserListener {
                                     JSONSyntaxErrors.add("Invalid VALUE :[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("RESURL")) {
-                                apv.setResURLExported(GetString(ev, value, ""));
+                                apv.setRegexTrackURLFromExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEX")) {
-                                apv.setresRegexURLencoded(GetString(ev, value, ""));
+                                apv.setResRegexURLencoded(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESVALPART")) {
-                                apv.setResPartTypeExported(GetString(ev, value, ""));
+                                apv.setHttpSectionTypeTrackFromExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEXPOS")) {
-                                apv.setResRegexPos(GetNumber(ev, value, 0));
+                                apv.setPositionTrackFrom(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("TOKEN")) {
-                                apv.setToken(GetString(ev, value, ""));
+                                apv.setParamNameTrackFrom(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("URLENCODE")) {
                                 apv.setUrlEncode(Getboolean(ev, value, false));
                             } else if (name.equalsIgnoreCase("FROMSTEPNO")) {
@@ -560,8 +577,6 @@ public class ParmGenGSON implements GsonParserListener {
                                 apv.setToStepNo(stepno);
                             } else if (name.equalsIgnoreCase("TOKENTYPE")) {
                                 apv.setTokenTypeName(GetString(ev, value, ""));
-                            } else if (name.equalsIgnoreCase("RESENCODETYPE")) {
-                                apv.setResEncodeTypeFromString(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("CONDTARGETNO")) {
                                 apv.setCondTargetNo(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("CONDREGEX")) {
@@ -611,6 +626,12 @@ public class ParmGenGSON implements GsonParserListener {
                                         aparms.setTypeVal(GetNumber(ev, value, 0));
                                     } else if (name.equalsIgnoreCase("INIVAL")) {
                                         aparms.setIniVal(GetNumber(ev, value, 0));
+                                    } else if (name.equalsIgnoreCase("CNTCOUNT")) {
+                                        aparms.setCntCount(GetInteger(ev, value, null));
+                                    } else if (name.equalsIgnoreCase("csvSeekIndex")) {
+                                        aparms.setCsvSeekIndex(GetLong(ev, value, 0));
+                                    } else if (name.equalsIgnoreCase("csvCurrentRecordNumber")) {
+                                        aparms.setCsvCurrentRecordNumber(GetInteger(ev, value, 0));
                                     } else if (name.equalsIgnoreCase("MAXVAL")) {
                                         aparms.setMaxVal(GetNumber(ev, value, 0));
                                     } else if (name.equalsIgnoreCase("CSVNAME")) {
@@ -629,8 +650,6 @@ public class ParmGenGSON implements GsonParserListener {
                                             }
                                         }
                                         aparms.setSetToStep(stepno);
-                                    } else if (name.equalsIgnoreCase("RELATIVECNTFILENAME")) {
-                                        aparms.setRelativeCntFileName(GetString(ev, value, ""));
                                     }
                                 }
                             }
@@ -658,7 +677,8 @@ public class ParmGenGSON implements GsonParserListener {
                     default:
                         if (apv != null) { // v2
                             if (name.equalsIgnoreCase("VALPART")) {
-                                if (!apv.setValPartExported(GetString(ev, value, ""))) {
+                                if (!apv.setHttpSectionTypeEmbedToExported(
+                                        GetString(ev, value, ""))) {
                                     JSONSyntaxErrors.add("VALPART has no value:[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("ISMODIFY")) {
@@ -682,15 +702,15 @@ public class ParmGenGSON implements GsonParserListener {
                                     JSONSyntaxErrors.add("Invalid VALUE :[" + value + "]");
                                 }
                             } else if (name.equalsIgnoreCase("RESURL")) {
-                                apv.setResURLExported(GetString(ev, value, ""));
+                                apv.setRegexTrackURLFromExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEX")) {
-                                apv.setresRegexURLencoded(GetString(ev, value, ""));
+                                apv.setResRegexURLencoded(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESVALPART")) {
-                                apv.setResPartTypeExported(GetString(ev, value, ""));
+                                apv.setHttpSectionTypeTrackFromExported(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("RESREGEXPOS")) {
-                                apv.setResRegexPos(GetNumber(ev, value, 0));
+                                apv.setPositionTrackFrom(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("TOKEN")) {
-                                apv.setToken(GetString(ev, value, ""));
+                                apv.setParamNameTrackFrom(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("URLENCODE")) {
                                 apv.setUrlEncode(Getboolean(ev, value, false));
                             } else if (name.equalsIgnoreCase("FROMSTEPNO")) {
@@ -705,8 +725,6 @@ public class ParmGenGSON implements GsonParserListener {
                                 apv.setToStepNo(stepno);
                             } else if (name.equalsIgnoreCase("TOKENTYPE")) {
                                 apv.setTokenTypeName(GetString(ev, value, ""));
-                            } else if (name.equalsIgnoreCase("RESENCODETYPE")) {
-                                apv.setResEncodeTypeFromString(GetString(ev, value, ""));
                             } else if (name.equalsIgnoreCase("CONDTARGETNO")) {
                                 apv.setCondTargetNo(GetNumber(ev, value, 0));
                             } else if (name.equalsIgnoreCase("CONDREGEX")) {

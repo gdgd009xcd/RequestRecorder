@@ -26,6 +26,7 @@ import org.zaproxy.zap.extension.automacrobuilder.mdepend.ClientDependent;
 public class CustomTrackingParamterConfigMain extends JDialog {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
+    private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
 
     public ParmGenGSONSaveV2 gson;// json file object
     DefaultTableModel model = null;
@@ -33,6 +34,7 @@ public class CustomTrackingParamterConfigMain extends JDialog {
     int default_rowheight;
     boolean ParmGenNew_Modified = false;
     ParmGenMacroTrace pmt;
+    private SelectedMessages selectedMessages = null;
 
 
     private void renderTable(){
@@ -75,11 +77,13 @@ public class CustomTrackingParamterConfigMain extends JDialog {
      * @param _pmt
      * @param gson
      */
-    CustomTrackingParamterConfigMain(Component component, ModalityType modal, ParmGenMacroTrace _pmt, ParmGenGSONSaveV2 gson) {
+    CustomTrackingParamterConfigMain(Component component, ModalityType modal, ParmGenMacroTrace _pmt, ParmGenGSONSaveV2 gson, List<PRequestResponse> selectedMessageList) {
         super(SwingUtilities.windowForComponent(component), bundle.getString("CustomTrackingParamterConfigMain.DialogTitle.text"), modal);
         pmt = _pmt;
         ParmGenNew_Modified = false;
         this.gson = gson;// set reference of ParmGenJSONSaveV2 object
+
+        this.selectedMessages = new SelectedMessages(selectedMessageList);
 
         customInitComponents();
 
@@ -144,6 +148,7 @@ public class CustomTrackingParamterConfigMain extends JDialog {
                                 AppParmsIni pini = appParmsIniList.get(row);
                                 if (pini != null) {
                                     pini.updatePause((boolean) cell);
+                                    gson.GSONsave(null);
                                 }
                             }
                         }
@@ -178,8 +183,6 @@ public class CustomTrackingParamterConfigMain extends JDialog {
             LANGUAGE.setSelectedItem(pmt.getSequenceEncode().getIANACharsetName());
         }
         
-        
-
         cleartables();
         renderTable();
     }
@@ -209,7 +212,7 @@ public class CustomTrackingParamterConfigMain extends JDialog {
      * @param dialogparent 
      */
     public void VisibleWhenJSONSaved(Component dialogparent){
-        if(!EnvironmentVariables.isFileHasBeenSavedOnce()){
+        if(!EnvironmentVariables.isSaved()){
             String chooseFileName = null;
             if ((chooseFileName = EnvironmentVariables.saveMacroBuilderJSONFileChooser(this)) != null) {
                 gson.GSONsave(chooseFileName);
@@ -324,6 +327,10 @@ public class CustomTrackingParamterConfigMain extends JDialog {
             ParmGen.ScannerInScope = false;
         }
     }//GEN-LAST:event_ScannerScopeActionPerformed
+
+    public SelectedMessages getSelectedMessagesInstance() {
+        return this.selectedMessages;
+    }
 
     @SuppressWarnings("rawtypes")
     private void customInitComponents() {

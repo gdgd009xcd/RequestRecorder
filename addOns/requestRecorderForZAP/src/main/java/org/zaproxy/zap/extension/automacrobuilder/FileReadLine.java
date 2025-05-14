@@ -17,9 +17,6 @@ package org.zaproxy.zap.extension.automacrobuilder;
 
 import static org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables.DefaultCSVFileIANACharsetName;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -33,45 +30,42 @@ import java.util.ArrayList;
 public class FileReadLine {
     private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
+    private static int MAX_COLUMN_READABLE = 9999;
     String csvfile;
-    String seekfile;
     RandomAccessFile raf = null;
-    long seekp;
-    int current_line;
-    boolean saveseekp;
+    long seekIndex;
+    int currentRecordNumber;
+    boolean saveSeekp;
     ArrayList<String> columns;
+    private AppParmsIni appParmsIni = null;
 
     private String csvFileIANACharsetName =
             DefaultCSVFileIANACharsetName; // CSV file Input/Output encoding
 
-    public FileReadLine(String _filepath, boolean _saveseekp) {
-        csvfile = _filepath;
-        seekfile = csvfile + "_L_";
-        raf = null;
-        seekp = 0;
-        saveseekp = _saveseekp;
-        current_line = 0;
-        columns = null;
+    public FileReadLine(AppParmsIni appParmsIni, String _filepath) {
+        this.csvfile = _filepath;
+        this.raf = null;
+        this.seekIndex = 0;
+        this.currentRecordNumber = 0;
+        this.columns = null;
+        this.appParmsIni = appParmsIni;
+        if (this.appParmsIni != null) {
+            this.seekIndex = this.appParmsIni.getCsvSeekIndex();
+            this.currentRecordNumber = this.appParmsIni.getCsvCurrentRecordNumber();
+        }
     }
 
     public String getFileName() {
-        return csvfile;
+        return this.csvfile;
     }
 
     private void rewind() {
-        if (saveseekp) {
-            try {
-                FileWriter filewriter = new FileWriter(seekfile, false);
-                String s1 = String.valueOf(0);
-                filewriter.write(s1);
-                filewriter.close();
-            } catch (Exception e) {
-                //
-                LOGGER4J.error("rewind", e);
-            }
+        this.seekIndex = 0;
+        this.currentRecordNumber = 0;
+        if (this.appParmsIni != null) {
+            this.appParmsIni.setCsvSeekIndex(this.seekIndex);
+            this.appParmsIni.setCsvCurrentRecordNumber(this.currentRecordNumber);
         }
-        seekp = 0;
-        current_line = 0;
     }
 
     /**
@@ -88,7 +82,7 @@ public class FileReadLine {
         boolean eol = false;
         while (!eol) {
             switch (c = f.read()) {
-                case -1: // EOFに達した場合
+                case -1: // reached EOF
                 case '\n':
                     eol = true;
                     break;
@@ -113,14 +107,14 @@ public class FileReadLine {
         return new String(barray.getBytes(), csvFileIANACharsetName);
     }
 
-    public synchronized ArrayList<String> readColumns() {
-        if (columns == null) {
-            columns = new ArrayList<String>();
+    public synchronized ArrayList<String> readOneRecordWithColumns() {
+        if (this.columns == null) {
+            this.columns = new ArrayList<String>();
         }
-        columns.clear();
-        String dummy = readLine(0, 99999, null, null, null);
-        if (columns.size() > 0) {
-            return columns;
+        this.columns.clear();
+        String dummy = readLineWithoutUpdateAppParmsIni(MAX_COLUMN_READABLE);
+        if (this.columns.size() > 0) {
+            return this.columns;
         }
         return null;
     }
@@ -128,65 +122,48 @@ public class FileReadLine {
     synchronized int skipLine(int l) {
         if (l >= 0) {
             rewind();
-            columns = null;
+            this.columns = null;
             while (l-- > 0) {
-                String dummy = readLine(0, 1, null, null, null);
+                String dummy = readLineWithoutUpdateAppParmsIni(1);
                 if (dummy == null) {
                     break;
                 }
             }
+            if (this.appParmsIni != null) {
+                this.appParmsIni.setCsvSeekIndex(this.seekIndex);
+                this.appParmsIni.setCsvCurrentRecordNumber(this.currentRecordNumber);
+            }
         } else {
             return -1;
         }
-        return current_line;
+        return this.currentRecordNumber;
     }
 
     synchronized String readLine(
-            int _valparttype, int _pos, AppParmsIni _parent, AppValue apv, ParmGenMacroTrace pmt) {
-        if (saveseekp) {
-            seekp = 0;
-            current_line = 0;
-        }
+            boolean isNoCount, int columnPos, AppValue apv, ParmGenMacroTrace pmt) {
+        this.seekIndex = 0;
+        this.currentRecordNumber = 0;
         String line = null;
         try {
-            if (saveseekp) { // seekp保存
-                try {
-                    // seekfile読み込み
-                    FileReader fr = new FileReader(seekfile);
-                    BufferedReader br = new BufferedReader(fr);
-                    String rdata;
-                    String alldata = "";
-                    while ((rdata = br.readLine()) != null) {
-                        rdata = rdata.replace("\r", "");
-                        rdata = rdata.replace("\n", "");
-                        alldata += rdata;
-                    }
-                    String[] slvalue = alldata.split(":");
-                    seekp = Long.valueOf(slvalue[0]);
-                    if (slvalue.length > 1) {
-                        current_line = Integer.parseInt(slvalue[1]);
-                    }
-                    fr.close();
-                } catch (Exception e) {
-                    // NOP
-                }
+            if (this.appParmsIni != null) {
+                this.seekIndex = this.appParmsIni.getCsvSeekIndex();
+                this.currentRecordNumber = this.appParmsIni.getCsvCurrentRecordNumber();
             }
 
-            // csvファイルseek
-            raf = new RandomAccessFile(csvfile, "r");
+            // open csv file with random access mode.
+            this.raf = new RandomAccessFile(this.csvfile, "r");
 
-            if (raf.length() <= seekp) {
+            if (this.raf.length() <= this.seekIndex) {
                 LOGGER4J.debug("seekp reached EOF\n");
-                raf.close();
-                raf = null;
+                this.raf.close();
+                this.raf = null;
                 return null;
             }
 
-            raf.seek(seekp);
+            this.raf.seek(this.seekIndex);
 
-            // csvファイル１レコード読み込み
-            // line = raf.readLine();
-            line = readLineRandomAccessFileCharset(raf);
+            // read one record from csv file.
+            line = readLineRandomAccessFileCharset(this.raf);
             String _col = line;
 
             CSVParser.Parse(line);
@@ -194,13 +171,13 @@ public class FileReadLine {
             CSVParser.CSVFields csvf = new CSVParser.CSVFields();
             while (CSVParser.getField(csvf)) {
                 _col = csvf.field;
-                if (columns != null) {
+                if (this.columns != null) {
                     String _c = _col;
                     _c = _c.replace("\r", "");
                     _c = _c.replace("\n", "");
-                    columns.add(_c);
+                    this.columns.add(_c);
                 }
-                if (_pos-- <= 0) break;
+                if (columnPos-- <= 0) break;
             }
             line = _col;
             line = line.replace("\r", "");
@@ -211,45 +188,99 @@ public class FileReadLine {
                 condInValid = !pmt.getFetchResponseVal().getCondValid(apv) && apv.hasCond();
             }
             if (condInValid
-                    || ((_valparttype & AppValue.C_NOCOUNT) == AppValue.C_NOCOUNT)
-                    || (_parent != null && _parent.isPaused())) {
-                // debuglog(1, " no seek forward:" + Long.toString(seekp));
+                    || isNoCount
+                    || (this.appParmsIni != null && this.appParmsIni.isPaused())) {
             } else {
-                LOGGER4J.debug(" seek forward:" + Long.toString(seekp));
-                // 現在のseek値取得
-                seekp = raf.getFilePointer();
-                current_line++;
-                // seekfileにseek値保存
-                if (saveseekp) {
-                    try {
-                        FileWriter filewriter = new FileWriter(seekfile, false);
-                        String s1 = String.valueOf(seekp) + ":" + String.valueOf(current_line);
-                        filewriter.write(s1);
-                        filewriter.close();
-                    } catch (Exception e) {
-                        //
-                        LOGGER4J.error("FileReadLine::readLine failed  ERR:" + e.toString(), e);
-                    }
-                }
+                LOGGER4J.debug(" seek forward:" + Long.toString(this.seekIndex));
+                // get current seek point
+                this.seekIndex = this.raf.getFilePointer();
+                this.currentRecordNumber++;
+            }
+
+            if (this.appParmsIni != null && !this.appParmsIni.isPaused()) {
+                this.appParmsIni.setCsvSeekIndex(this.seekIndex);
+                this.appParmsIni.setCsvCurrentRecordNumber(this.currentRecordNumber);
             }
         } catch (IOException e) {
             LOGGER4J.error(
-                    "FileReadLine::readLine failed csvfile:" + csvfile + " ERR:" + e.toString(), e);
+                    "FileReadLine::readLine failed csvfile:"
+                            + this.csvfile
+                            + " ERR:"
+                            + e.toString(),
+                    e);
         } finally {
-            if (raf != null) {
+            if (this.raf != null) {
                 try {
-                    raf.close();
+                    this.raf.close();
                 } catch (Exception e) {
                     //
                 }
-                raf = null;
+                this.raf = null;
             }
         }
         return line;
     }
 
-    synchronized String getCurrentReadLine(int _valparttype, int _pos, AppParmsIni _parent) {
-        String line = readLine(_valparttype, _pos, _parent, null, null);
-        return String.valueOf(this.current_line);
+    synchronized String readLineWithoutUpdateAppParmsIni(int columnPos) {
+        String line = null;
+        try {
+            // open csv file with random access mode.
+            this.raf = new RandomAccessFile(this.csvfile, "r");
+
+            if (this.raf.length() <= this.seekIndex) {
+                LOGGER4J.debug("seekp reached EOF\n");
+                this.raf.close();
+                this.raf = null;
+                return null;
+            }
+
+            this.raf.seek(this.seekIndex);
+
+            // read one record from csv file.
+            line = readLineRandomAccessFileCharset(this.raf);
+            String _col = line;
+
+            CSVParser.Parse(line);
+
+            CSVParser.CSVFields csvf = new CSVParser.CSVFields();
+            while (CSVParser.getField(csvf)) {
+                _col = csvf.field;
+                if (this.columns != null) {
+                    String _c = _col;
+                    _c = _c.replace("\r", "");
+                    _c = _c.replace("\n", "");
+                    this.columns.add(_c);
+                }
+                if (columnPos-- <= 0) break;
+            }
+            line = _col;
+            line = line.replace("\r", "");
+            line = line.replace("\n", "");
+
+            // get current seek point
+            this.seekIndex = this.raf.getFilePointer();
+            this.currentRecordNumber++;
+        } catch (IOException e) {
+            LOGGER4J.error(
+                    "FileReadLine::readLineWithoutUpdateAppParmsIni failed csvfile:"
+                            + this.csvfile
+                            + " ERR:"
+                            + e.toString(),
+                    e);
+        } finally {
+            if (this.raf != null) {
+                try {
+                    this.raf.close();
+                } catch (Exception e) {
+                    //
+                }
+                this.raf = null;
+            }
+        }
+        return line;
+    }
+
+    synchronized String getCurrentReadLine() {
+        return String.valueOf(this.currentRecordNumber);
     }
 }

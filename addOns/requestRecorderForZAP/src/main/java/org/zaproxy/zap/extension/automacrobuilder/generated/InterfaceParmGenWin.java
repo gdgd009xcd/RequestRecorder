@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zaproxy.zap.extension.automacrobuilder;
+package org.zaproxy.zap.extension.automacrobuilder.generated;
+
+import org.zaproxy.zap.extension.automacrobuilder.SelectedMessages;
 
 /**
  * @author gdgd009xcd
  */
-public interface interfaceParmGenWin {
+public interface InterfaceParmGenWin {
     public void updateMessageAreaInSelectedModel(int panel);
 
     public void setVisible(boolean f);
 
     public void update();
+
+    public SelectedMessages getSelectedMessagesInstance();
 }

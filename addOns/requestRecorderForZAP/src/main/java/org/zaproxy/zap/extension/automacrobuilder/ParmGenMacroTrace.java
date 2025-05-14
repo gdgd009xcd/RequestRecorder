@@ -330,7 +330,11 @@ public class ParmGenMacroTrace extends ClientDependent {
         return !CBreplaceTrackingParam && isCurrentRequest();
     }
 
-    // ３）カレントリクエスト終了(レスポンス受信後)後に実行
+    /**
+     * do aftertask when current request sending task is ended.
+     *
+     * @param pqrs
+     */
     public void endAfterCurrentRequest(PRequestResponse pqrs) {
         if (rlist != null && selected_request < rlist.size() && selected_request >= 0) {
             pqrs.setComments(getComments());
@@ -1022,65 +1026,6 @@ public class ParmGenMacroTrace extends ClientDependent {
                         new ParmGenMacroTraceParams(currentSelectedPos, lastStepNo, tabIndex);
                 pqr.request.setParamsCustomHeader(pmtParams);
                 burpSendToIntruder(host, port, useHttps, pqr.request.getByteMessage());
-            }
-        }
-    }
-
-    /**
-     * save originalrlist to JSON
-     *
-     * @param gsonsaveobj
-     */
-    @Deprecated
-    void GSONSave(GSONSaveObject gsonsaveobj) {
-        if (gsonsaveobj != null) {
-            if (originalrlist != null) {
-                gsonsaveobj.CurrentRequest = getCurrentRequestPos();
-
-                for (PRequestResponse pqr : originalrlist) {
-                    GSONSaveObject.GsonPRequestResponse preqresobj =
-                            new GSONSaveObject.GsonPRequestResponse();
-                    byte[] qbin = pqr.request.getByteMessage();
-                    byte[] rbin = pqr.response.getByteMessage();
-                    // byte[] encodedBytes = Base64.encodeBase64(qbin);
-                    String qbase64 =
-                            Base64.getEncoder()
-                                    .encodeToString(qbin); // same as new String(encode(src),
-                    // StandardCharsets.ISO_8859_1)
-                    /*
-                    try {
-                        qbase64 = new String(encodedBytes,"ISO-8859-1");
-                    } catch (UnsupportedEncodingException ex) {
-                        Logger.getLogger(ParmGenMacroTrace.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    */
-                    // encodedBytes = Base64.encodeBase64(rbin);
-                    String rbase64 = Base64.getEncoder().encodeToString(rbin);
-                    /*
-                    try {
-                        rbase64 = new String(encodedBytes, "ISO-8859-1");
-                    } catch (UnsupportedEncodingException ex) {
-                        Logger.getLogger(ParmGenMacroTrace.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    */
-                    preqresobj.PRequest64 = qbase64;
-                    preqresobj.PResponse64 = rbase64;
-
-                    String host = pqr.request.getHost();
-                    int port = pqr.request.getPort();
-                    boolean ssl = pqr.request.isSSL();
-                    String comments = pqr.getComments();
-                    boolean isdisabled = pqr.isDisabled();
-                    boolean iserror = pqr.isError();
-                    preqresobj.Host = host;
-                    preqresobj.Port = port;
-                    preqresobj.SSL = ssl;
-                    preqresobj.Comments = comments == null ? "" : comments;
-                    preqresobj.Disabled = isdisabled;
-                    preqresobj.Error = iserror;
-
-                    gsonsaveobj.PRequestResponses.add(preqresobj);
-                }
             }
         }
     }

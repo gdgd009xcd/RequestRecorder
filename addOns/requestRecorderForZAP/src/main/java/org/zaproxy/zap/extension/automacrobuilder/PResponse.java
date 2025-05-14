@@ -238,4 +238,10 @@ public class PResponse extends ParseHTTPHeaders {
         }
         return reschunks;
     }
+
+    public List<ParmGenToken> getBodyParamsFromResponse() {
+        String bodyString = getBodyStringWithoutHeader();
+        ParmGenParser pgser = new ParmGenParser(bodyString);
+        return pgser.getNameValues();
+    }
 }

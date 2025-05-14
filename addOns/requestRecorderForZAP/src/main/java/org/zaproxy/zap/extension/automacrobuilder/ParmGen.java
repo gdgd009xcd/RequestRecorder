@@ -80,9 +80,9 @@ public class ParmGen {
         LOGGER4J.debug("method[" + method + "] request[" + url + "]");
         int qpos = -1;
         String[] nvcont = null;
-        switch (av.getTypeIntExported()) {
+        switch (av.getHttpSectionTypeEmbedTo()) {
                 // switch(av.valparttype & AppValue.C_VTYPE){
-            case AppValue.V_PATH: // path
+            case Path: // path
                 // path = url
                 nvcont = av.replacePathContents(pmt, pini, path, orig_url, errorhash);
                 if (nvcont != null) {
@@ -103,7 +103,7 @@ public class ParmGen {
                     }
                 }
                 break;
-            case AppValue.V_QUERY: // query
+            case Query: // query
                 if ((qpos = url.indexOf('?')) != -1) {
                     path = url.substring(0, qpos);
                     String query = url.substring(qpos + 1);
@@ -130,7 +130,7 @@ public class ParmGen {
                     }
                 }
                 break;
-            case AppValue.V_HEADER: // header
+            case Header: // header
                 // String[] headers=request.getHeaderNames();
                 // for(String header : headers){
                 // int i = 0;
@@ -405,10 +405,11 @@ public class ParmGen {
             int row, col;
             row = r;
             col = c;
-            switch (av.getResTypeInt()) {
-                case AppValue.V_REQTRACKBODY:
+            switch (av.getHttpSectionTypeTrackFrom()) {
+                case RequestBody:
+                case Request:
                     return pmt.getFetchResponseVal()
-                            .reqbodymatch(pmt, av, url, prequest, row, col, true);
+                            .requestBodyMatch(pmt, av, url, prequest, row, col, true);
                 default:
                     break;
             }
@@ -424,39 +425,38 @@ public class ParmGen {
         row = r;
         col = c;
         boolean rflag = false;
-        boolean autotrack = false;
         String rowcolstr = Integer.toString(row) + "," + Integer.toString(col);
         // String path = new String(url);
         if (av.getFromStepNo() < 0 || av.getFromStepNo() == pmt.getStepNo()) {
             int qpos = -1;
-            switch (av.getResTypeInt()) {
-                    // switch(av.resPartType & AppValue.C_VTYPE){
-                case AppValue.V_PATH: // path
+            switch (av.getHttpSectionTypeTrackFrom()) {
+                case Path: // path
                     // ParmVars.plog.debuglog(0, "ParseResponse: V_PATH " + rowcolstr);
                     break;
-                case AppValue.V_QUERY: // query
+                case Query: // query
                     // ParmVars.plog.debuglog(0, "ParseResponse: V_QUERY " + rowcolstr);
                     break;
-                case AppValue.V_HEADER: // header
+                case Header: // header
                     // ParmVars.plog.debuglog(0, "ParseResponse: V_HEADER " + rowcolstr);
                     // String[] headers=request.getHeaderNames();
                     // for(String header : headers){
                     rflag =
                             pmt.getFetchResponseVal()
-                                    .headermatch(pmt, url, presponse, row, col, true, av);
+                                    .responseHeaderMatch(pmt, url, presponse, row, col, true, av);
                     break;
-                case AppValue.V_REQTRACKBODY: // request追跡なのでNOP.
+                case RequestBody: // NOP
+                case Request: // NOP
                     break;
-                case AppValue.V_AUTOTRACKBODY: // responseのbodyを追跡
-                    autotrack = true;
+                case ResponseBody: // tracking params in response body which is parsed by
+                    // parser engines.
+                case Response:
                 default:
                     try {
                         // body
                         // ParmVars.plog.debuglog(0, "ParseResponse: V_BODY " + rowcolstr);
                         rflag =
                                 pmt.getFetchResponseVal()
-                                        .bodymatch(
-                                                pmt, url, presponse, row, col, true, autotrack, av);
+                                        .responseBodyMatch(pmt, url, presponse, row, col, true, av);
                     } catch (UnsupportedEncodingException ex) {
                         Logger.getLogger(ParmGen.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -683,7 +683,9 @@ public class ParmGen {
                     int col = 0;
                     while (pt.hasNext()) {
                         AppValue av = pt.next();
-                        if (av.isEnabled() && av.getResTypeInt() >= AppValue.V_REQTRACKBODY) {
+                        if (av.isEnabled()
+                                && av.getHttpSectionTypeTrackFrom().ordinal()
+                                        >= AppValue.HttpSectionTypes.Request.ordinal()) {
                             fetched = FetchRequest(prequest, pini, av, row, col);
                             if (fetched) {
                                 // pt.set(av); no need set
@@ -782,7 +784,8 @@ public class ParmGen {
                             }
                             hasboundary = true;
                         }
-                        LOGGER4J.debug("***URL正規表現[" + pini.getUrl() + "]マッチパターン[" + url + "]");
+                        LOGGER4J.debug(
+                                "***URL regex[" + pini.getUrl() + "] matched URL[" + url + "]");
                         if (contarray == null) {
 
                             ParmGenBinUtil warray = new ParmGenBinUtil(requestbytes);
@@ -887,7 +890,9 @@ public class ParmGen {
                     int col = 0;
                     while (pt.hasNext()) {
                         AppValue av = pt.next();
-                        if (av.isEnabled() && av.getResTypeInt() >= AppValue.V_REQTRACKBODY) {
+                        if (av.isEnabled()
+                                && av.getHttpSectionTypeTrackFrom().ordinal()
+                                        >= AppValue.HttpSectionTypes.Request.ordinal()) {
                             fetched = FetchRequest(prequest, pini, av, row, col);
                             if (fetched) {
                                 // pt.set(av); no need set

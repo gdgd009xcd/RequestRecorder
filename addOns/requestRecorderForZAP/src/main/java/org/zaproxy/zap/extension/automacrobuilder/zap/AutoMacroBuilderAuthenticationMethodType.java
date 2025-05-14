@@ -156,7 +156,7 @@ public class AutoMacroBuilderAuthenticationMethodType extends AuthenticationMeth
                 AuthenticationCredentials authenticationCredentials,
                 User user)
                 throws UnsupportedAuthenticationCredentialsException {
-            LOGGER4J.info("authenticate method is CALLED.");
+            LOGGER4J.debug("authenticate method is CALLED.");
             ParmGenMacroTrace pmt = this.mbUI.getParmGenMacroTraceAtTabIndex(this.tabIndex);
             int subSequenceScanLimit = this.mbUI.getSubSequenceScanLimit();
             int lastStepNo = pmt.getLastStepNo(this.targetStepNo, subSequenceScanLimit);

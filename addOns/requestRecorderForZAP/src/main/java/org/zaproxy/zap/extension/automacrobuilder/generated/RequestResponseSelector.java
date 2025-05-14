@@ -4,48 +4,44 @@
  */
 package org.zaproxy.zap.extension.automacrobuilder.generated;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import org.zaproxy.zap.extension.automacrobuilder.PRequest;
-import org.zaproxy.zap.extension.automacrobuilder.PRequestResponse;
-import org.zaproxy.zap.extension.automacrobuilder.PResponse;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenGSONSaveV2;
+import org.zaproxy.zap.extension.automacrobuilder.*;
 import org.zaproxy.zap.extension.automacrobuilder.view.JTextPaneContents;
-import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
 
 /**
  *
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class SelectRequest extends javax.swing.JDialog {
+public class RequestResponseSelector extends javax.swing.JDialog {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
    DefaultTableModel model;
-   interfaceParmGenWin pgenwin;
-   ArrayList<PRequestResponse> P_proxy_messages;
+   InterfaceParmGenWin pgenwin;
+   List<PRequestResponse> P_proxy_messages;
    int selected_message_idx;
    int panelno;
-   interfaceParmGenWin nextwin;
+   InterfaceParmGenWin nextwin;
 
     /**
      * create new instance of SelectRequest<br>
      * you must define this in your extended classes for instanciating of your class
      *
      * @param title
-     * @param _pgenwin
+     * @param pgenwin
      * @param _nextwin
      * @param _panelno
      * @return new instance of SelectRequest
      */
-   public static SelectRequest newInstance(String title, interfaceParmGenWin _pgenwin, interfaceParmGenWin _nextwin, int _panelno) {
-       return new SelectRequest().buildThis(title, _pgenwin, _nextwin, _panelno);
+   public static RequestResponseSelector newInstance(String title, ParmGenNew pgenwin, InterfaceParmGenWin _nextwin, int _panelno) {
+       return new RequestResponseSelector().buildThis(title, pgenwin, _nextwin, _panelno);
    }
 
     /**
@@ -60,11 +56,11 @@ public class SelectRequest extends javax.swing.JDialog {
      * @param _panelno
      * @return this
      */
-   protected SelectRequest buildThis(String title, interfaceParmGenWin _pgenwin, interfaceParmGenWin _nextwin, int _panelno) {
+   protected RequestResponseSelector buildThis(String title, ParmGenNew _pgenwin, InterfaceParmGenWin _nextwin, int _panelno) {
        pgenwin = _pgenwin;
        panelno = _panelno;
        nextwin = _nextwin;
-       setRequest(ParmGenGSONSaveV2.proxy_messages);
+       setRequest(this.pgenwin.getSelectedMessagesInstance().getSelectedMessageList());
        initComponents();
        setTitle(title);
        TableColumn col ;
@@ -98,7 +94,7 @@ public class SelectRequest extends javax.swing.JDialog {
        return this;
    }
 
-    protected SelectRequest() {
+    protected RequestResponseSelector() {
        super();
     }
 
@@ -107,7 +103,7 @@ public class SelectRequest extends javax.swing.JDialog {
      *
      * @param proxy_messages
      */
-    public void setRequest(ArrayList <PRequestResponse> proxy_messages){
+    public void setRequest(List<PRequestResponse> proxy_messages){
         
         model = new DefaultTableModel();
 
@@ -253,8 +249,8 @@ public class SelectRequest extends javax.swing.JDialog {
     private void MessageSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MessageSelectedActionPerformed
         // TODO add your handling code here:
         // update selected message
-        ParmGenGSONSaveV2.selected_messages.clear();
-        ParmGenGSONSaveV2.selected_messages.add(ParmGenGSONSaveV2.proxy_messages.get(selected_message_idx));
+        this.pgenwin.getSelectedMessagesInstance().clearChoosedMessageList();
+        this.pgenwin.getSelectedMessagesInstance().setChoosedMessageWithSpecifiedIndex(selected_message_idx);
         pgenwin.updateMessageAreaInSelectedModel(panelno);
         dispose();
         if(nextwin!=null){

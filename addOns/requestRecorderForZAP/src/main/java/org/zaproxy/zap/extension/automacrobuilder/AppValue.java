@@ -36,30 +36,27 @@ public class AppValue {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("burp/Bundle");
 
-    // valparttype,         value, token, tamattack,tamadvance,tamposition,urlencode
-    // target part, replace or not,  value, Name,  Attack,   Advance,   Position,   URLencode
-    private String valpart; // target part of replacing in Http request
-    private int valparttype; //  1-query, 2-body  3-header  4-path.... 16(10000) bit == no count
+    private HttpSectionTypes httpSectionTypeEmbedTo;
     // 32(100000) == no modify
-    private String value = null; // Target Regex String to embed value in
-    private Pattern valueregex; //  Target Regex to embed value in
+    private String regexEmbedTo = null; // Target Regex String to embed value in
+    private Pattern pattern_RegexEmbedTo; //  Target Regex to embed value in
 
     private int csvpos;
 
-    private UUID trackkey = null;
-    private String resURL = "";
-    private Pattern Pattern_resURL = null;
-    private String resRegex = "";
-    private Pattern Pattern_resRegex = null;
-    private int resPartType;
-    private int resRegexPos = -1; // Tracking token　position on page(start 0)
-    private String token; // Tracking token name
+    private UUID trackKey = null;
+    private String regexTrackURLFrom = "";
+    private Pattern pattern_regexTrackURLFrom = null;
+    private String regexTrackValFrom = "";
+    private Pattern pattern_regexTrackValFrom = null;
+    private HttpSectionTypes httpSectionTypeTrackFrom;
+    private int positionTrackFrom = -1; // Tracking trackParamName　position on page(start 0)
+    private String paramNameTrackFrom; // Tracking Parameter name
     //
-    // This parameter does not use when scanning. only  temporarily use  for GUI manipulation,
+    // This parameter does not use when scanning. only temporarily use for GUI manipulation,
     // so it is not saved to file.
     private String resFetchedValue = null; // Token extracted from response during tracking process
 
-    private TokenTypeNames tokentype = TokenTypeNames.INPUT;
+    private TokenTypeNames tokenTypeTrackFrom = TokenTypeNames.INPUT;
 
     // conditional parameter tracking feature
     private int condTargetNo = -1; // conditinal tracking targetNo default: -1(any == wildcard "*")
@@ -71,6 +68,7 @@ public class AppValue {
     // if below value is true, request parameter replaced even if fetched tracking
     // value is zero size string.
     private boolean replaceZeroSize = false;
+    private boolean isNoCount = false;
 
     public enum TokenTypeNames {
         DEFAULT,
@@ -82,18 +80,43 @@ public class AppValue {
         TEXTAREA,
         JSON,
         ACTION,
-        META,
+        META;
+
+        public static TokenTypeNames parseString(String tkname) {
+            if (tkname != null && !tkname.isEmpty()) {
+                TokenTypeNames[] tktypearray = TokenTypeNames.values();
+                for (TokenTypeNames tktype : tktypearray) {
+                    if (tktype.name().equalsIgnoreCase(tkname)) {
+                        return tktype;
+                    }
+                }
+            }
+            return TokenTypeNames.DEFAULT;
+        }
+
+        public static boolean isExist(String tkname) {
+            if (tkname != null && !tkname.isEmpty()) {
+                TokenTypeNames[] tktypearray = TokenTypeNames.values();
+                for (TokenTypeNames tktype : tktypearray) {
+                    if (tktype.name().equalsIgnoreCase(tkname)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            String value = super.toString();
+            if (this == TokenTypeNames.DEFAULT) {
+                value = "";
+            }
+            return value;
+        }
     };
 
-    private boolean urlencode; // Whether to  encode URL
-
-    private ResEncodeTypes resencodetype = ResEncodeTypes.RAW; // Encode type of tracking source
-
-    public enum ResEncodeTypes {
-        RAW,
-        JSON,
-        URLENCODE,
-    }
+    private boolean urlEncoded; // Whether to  encode URL
 
     // below value is the position to extract the tracking parameter value
     private int fromStepNo = -1;
@@ -106,40 +129,60 @@ public class AppValue {
     //  ==TOSTEPANY: set tracking value to any request.
     private int toStepNo = EnvironmentVariables.TOSTEPANY;
 
-    public static final int V_QUERY = 1;
-    public static final int V_BODY = 2;
-    public static final int V_HEADER = 3;
-    public static final int V_PATH = 4;
-    public static final int V_AUTOTRACKBODY = 5; //  response body tracking
-    public static final int V_REQTRACKBODY = 6; // password(request body) tracking
-    public static final int V_REQTRACKQUERY = 7; // password(request query) tracking
-    public static final int V_REQTRACKPATH = 8; // password (request path) tracking
-    public static final int C_NOCOUNT = 16;
-    public static final int C_VTYPE = 15;
-    public static String[] ctypestr = {
-        // V_QUERY ==1
-        "",
-        "query",
-        "body",
-        "header",
-        "path",
-        "responsebody",
-        "requestbody",
-        "requestquery",
-        "requestpath",
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null // 0-15
-    };
+    public enum HttpSectionTypes {
+        Default,
+        Query,
+        Body,
+        Header,
+        Path,
+        // Track Value From Response
+        Response, //  get tracking value with regex from whole response message
+        ResponseBody, // get tracking value from parsed response body
+        // Track Value From Request. ordinal() >= Request.ordinal()
+        Request, // get tracking value with regex from whole request message
+        RequestBody, // get tracking value from parsed request body
+        RequestQuery, // get tracking value from parsed query params
+        RequestPath; // get tracking value from parsed path params
 
-    public static final int I_APPEND = 0;
-    public static final int I_INSERT = 1;
-    public static final int I_REPLACE = 2;
-    public static final int I_REGEX = 3;
+        /**
+         * parse HttpSectionTypes String. the param is Case-Insensitive.
+         *
+         * @param httpSectionTypeString
+         * @return HttpSectionTypes
+         */
+        public static HttpSectionTypes parseString(String httpSectionTypeString) {
+            if (httpSectionTypeString != null && !httpSectionTypeString.isEmpty()) {
+                HttpSectionTypes[] tktypearray = HttpSectionTypes.values();
+                for (HttpSectionTypes tktype : tktypearray) {
+                    if (tktype.name().equalsIgnoreCase(httpSectionTypeString)) {
+                        return tktype;
+                    }
+                }
+            }
+            return HttpSectionTypes.Default;
+        }
+
+        public static boolean isExist(String httpSectionTypeString) {
+            if (httpSectionTypeString != null && !httpSectionTypeString.isEmpty()) {
+                HttpSectionTypes[] tktypearray = HttpSectionTypes.values();
+                for (HttpSectionTypes tktype : tktypearray) {
+                    if (tktype.name().equalsIgnoreCase(httpSectionTypeString)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            String value = super.toString();
+            if (this == HttpSectionTypes.Default) {
+                value = "";
+            }
+            return value;
+        }
+    }
 
     private boolean enabled = true; // enable/disable flag
 
@@ -147,51 +190,42 @@ public class AppValue {
         Pattern_condRegex = null;
         condTargetNo = -1;
         condRegex = null;
-        trackkey = null;
+        trackKey = null;
         resFetchedValue = null;
         enabled = true;
-        tokentype = TokenTypeNames.INPUT;
+        httpSectionTypeTrackFrom = HttpSectionTypes.Default;
+        tokenTypeTrackFrom = TokenTypeNames.INPUT;
         replaceZeroSize = false;
     }
 
     public AppValue() {
-        setVal(null);
+        setRegexEmbedValTo(null);
         initctype();
-        resRegexPos = -1;
+        positionTrackFrom = -1;
     }
 
-    AppValue(String _Type, boolean _disabled, String _value) {
+    AppValue(HttpSectionTypes httpSectionTypeEmbedTo, boolean _disabled, String regexEmbedTo) {
         initctype();
-        setValPart(_Type);
+        setHttpSectionTypeEmbedoTo(httpSectionTypeEmbedTo);
         setEnabled(!_disabled); // NOT
         // value = _value;
-        setVal(_value);
-        resRegexPos = -1;
+        setRegexEmbedValTo(regexEmbedTo);
+        positionTrackFrom = -1;
     }
 
     public AppValue(
-            String _Type, boolean _disabled, int _csvpos, String _value, boolean increment) {
+            HttpSectionTypes _Type,
+            boolean _disabled,
+            int _csvpos,
+            String regexEmbedTo,
+            boolean increment) {
         initctype();
-        setValPart(_Type);
+        setHttpSectionTypeEmbedoTo(_Type);
         setEnabled(!_disabled); // NOT
         csvpos = _csvpos;
         // value = _value;
-        setVal(_value);
-        resRegexPos = -1;
-        if (increment) {
-            clearNoCount();
-        } else {
-            setNoCount();
-        }
-    }
-
-    public AppValue(String _Type, boolean _disabled, String _value, boolean increment) {
-        initctype();
-        setValPart(_Type);
-        setEnabled(!_disabled); // NOT
-        // value = _value;
-        setVal(_value);
-        resRegexPos = -1;
+        setRegexEmbedValTo(regexEmbedTo);
+        positionTrackFrom = -1;
         if (increment) {
             clearNoCount();
         } else {
@@ -200,36 +234,54 @@ public class AppValue {
     }
 
     public AppValue(
-            String _Type,
+            HttpSectionTypes httpSectionTypeEmbedTo,
             boolean _disabled,
-            String _value,
-            String _resURL,
-            String _resRegex,
-            String _resPartType,
-            String _resRegexPos,
-            String _token,
-            boolean _urlenc,
-            int _fromStepNo,
-            int _toStepNo,
-            String _tokentypename,
+            String regexEmbedTo,
+            boolean increment) {
+        initctype();
+        setHttpSectionTypeEmbedoTo(httpSectionTypeEmbedTo);
+        setEnabled(!_disabled); // NOT
+        // value = _value;
+        setRegexEmbedValTo(regexEmbedTo);
+        this.positionTrackFrom = -1;
+        if (increment) {
+            clearNoCount();
+        } else {
+            setNoCount();
+        }
+    }
+
+    public AppValue(
+            HttpSectionTypes part,
+            boolean noOperation,
+            String regexEmbedValTo,
+            String regexTrackURLFrom,
+            String regexTrackValFrom,
+            HttpSectionTypes httpSectionTypeTrackFrom,
+            String positionTrackFrom,
+            String paramNameTrackFrom,
+            boolean urlEncoded,
+            int fromStepNo,
+            int toStepNo,
+            TokenTypeNames tokenTypeTrackFrom,
             String condRegex,
             int condTargetNo,
             boolean condRegexTargetIsRequest,
             boolean replaceZeroSize) {
         initctype();
-        setValPart(_Type);
-        setEnabled(!_disabled); // NOT
+        setHttpSectionTypeEmbedoTo(part);
+        setEnabled(!noOperation); // NOT
         // value = _value;
-        setVal(_value);
-        setResURL(_resURL);
-        setresRegex(_resRegex);
-        setResPartType(_resPartType);
-        setResRegexPosFromString(_resRegexPos);
-        token = _token;
-        urlencode = _urlenc;
-        fromStepNo = _fromStepNo;
-        toStepNo = _toStepNo;
-        tokentype = parseTokenTypeName(_tokentypename);
+        setRegexEmbedValTo(regexEmbedValTo);
+        setRegexTrackURLFrom(regexTrackURLFrom);
+        setRegexTrackValFrom(regexTrackValFrom);
+        this.httpSectionTypeTrackFrom = httpSectionTypeTrackFrom;
+        setPositionTrackFromString(positionTrackFrom);
+        this.paramNameTrackFrom = paramNameTrackFrom;
+        this.urlEncoded = urlEncoded;
+        this.fromStepNo = fromStepNo;
+        this.toStepNo = toStepNo;
+        this.tokenTypeTrackFrom = tokenTypeTrackFrom;
         setCondRegex(condRegex);
         this.condTargetNo = condTargetNo;
         this.condRegexTargetIsRequest = condRegexTargetIsRequest;
@@ -280,21 +332,21 @@ public class AppValue {
      * @return
      */
     public boolean isUrlEncode() {
-        return this.urlencode;
+        return this.urlEncoded;
     }
 
     /**
      * Set urlencode value
      *
-     * @param urlencode
+     * @param urlEncoded
      */
-    public void setUrlEncode(boolean urlencode) {
-        this.urlencode = urlencode;
+    public void setUrlEncode(boolean urlEncoded) {
+        this.urlEncoded = urlEncoded;
     }
 
     /** Get TokenType value */
-    public TokenTypeNames getTokenType() {
-        return this.tokentype;
+    public TokenTypeNames getTokenTypeTrackFrom() {
+        return this.tokenTypeTrackFrom;
     }
 
     /**
@@ -302,8 +354,8 @@ public class AppValue {
      *
      * @param tokentype
      */
-    public void setTokenType(TokenTypeNames tokentype) {
-        this.tokentype = tokentype;
+    public void setTokenTypeTrackFrom(TokenTypeNames tokentype) {
+        this.tokenTypeTrackFrom = tokentype;
     }
 
     /**
@@ -323,10 +375,10 @@ public class AppValue {
     /**
      * Set token value
      *
-     * @param token
+     * @param paramNameTrackFrom
      */
-    public void setToken(String token) {
-        this.token = token;
+    public void setParamNameTrackFrom(String paramNameTrackFrom) {
+        this.paramNameTrackFrom = paramNameTrackFrom;
     }
 
     /**
@@ -334,8 +386,8 @@ public class AppValue {
      *
      * @return
      */
-    public String getToken() {
-        return this.token;
+    public String getParamNameTrackFrom() {
+        return this.paramNameTrackFrom;
     }
 
     /**
@@ -362,10 +414,10 @@ public class AppValue {
      * @return UUID
      */
     public synchronized UUID getTrackKey() {
-        if (trackkey == null) {
-            trackkey = UUIDGenerator.getUUID();
+        if (trackKey == null) {
+            trackKey = UUIDGenerator.getUUID();
         }
-        return trackkey;
+        return trackKey;
     }
 
     public boolean isEnabled() {
@@ -378,50 +430,6 @@ public class AppValue {
 
     public void setEnabledExported(boolean b) {
         setEnabled(b);
-    }
-
-    /**
-     * Get ResEncodeTypes : response page content type JSON/RAW/URLENCODE..
-     *
-     * @return
-     */
-    public ResEncodeTypes getResEncodeType() {
-        return this.resencodetype;
-    }
-
-    /**
-     * Convert string representation to ResEncodeType and set its value to resencodetype parameter
-     *
-     * @param t
-     */
-    public void setResEncodeTypeFromString(String t) {
-        resencodetype = parseResEncodeTypeString(t);
-    }
-
-    /**
-     * Convert string represantation to ResEncodeTypes
-     *
-     * @param t
-     * @return
-     */
-    public ResEncodeTypes parseResEncodeTypeString(String t) {
-        ResEncodeTypes[] encarray = ResEncodeTypes.values();
-        if (t != null && !t.isEmpty()) {
-            String tupper = t.toUpperCase();
-            for (ResEncodeTypes enc : encarray) {
-                if (enc.name().toUpperCase().equals(tupper)) {
-                    return enc;
-                }
-            }
-        }
-        return ResEncodeTypes.RAW;
-    }
-
-    // Target Request Parameter Type List for tracking table
-    public static String[] makeTargetRequestParamTypes() {
-        return new String[] {
-            ctypestr[V_PATH], ctypestr[V_QUERY], ctypestr[V_BODY], ctypestr[V_HEADER]
-        };
     }
 
     //
@@ -441,31 +449,31 @@ public class AppValue {
         return "";
     }
 
-    private void setResURL(String _url) {
+    private void setRegexTrackURLFrom(String _url) {
         if (_url == null) _url = "";
-        resURL = _url.trim();
+        regexTrackURLFrom = _url.trim();
         try {
-            Pattern_resURL = ParmGenUtil.Pattern_compile(resURL);
+            pattern_regexTrackURLFrom = ParmGenUtil.Pattern_compile(regexTrackURLFrom);
         } catch (Exception e) {
-            Pattern_resURL = null;
+            pattern_regexTrackURLFrom = null;
             LOGGER4J.error("ERROR: setresURL ", e);
         }
     }
 
-    public void setResURLExported(String _url) {
-        setResURL(_url);
+    public void setRegexTrackURLFromExported(String _url) {
+        setRegexTrackURLFrom(_url);
     }
 
-    public String getresURL() {
-        return resURL;
+    public String getRegexTrackURLFrom() {
+        return regexTrackURLFrom;
     }
 
-    public Pattern getPattern_resURL() {
-        return Pattern_resURL;
+    public Pattern getPattern_regexTrackURLFrom() {
+        return pattern_regexTrackURLFrom;
     }
 
-    public Pattern getPattern_resRegex() {
-        return Pattern_resRegex;
+    public Pattern getPattern_regexTrackValFrom() {
+        return pattern_regexTrackValFrom;
     }
 
     /**
@@ -477,23 +485,23 @@ public class AppValue {
         return Pattern_condRegex;
     }
 
-    public String getresRegex() {
-        return resRegex;
+    public String getRegexTrackValFrom() {
+        return regexTrackValFrom;
     }
 
-    public void setresRegexURLencoded(String _regex) {
+    public void setResRegexURLencoded(String _regex) {
         if (_regex == null) _regex = "";
-        setresRegex(ParmGenUtil.URLdecode(_regex, JSONFileIANACharsetName));
+        setRegexTrackValFrom(ParmGenUtil.URLdecode(_regex, JSONFileIANACharsetName));
     }
 
-    private void setresRegex(String _regex) {
+    private void setRegexTrackValFrom(String _regex) {
         if (_regex == null) _regex = "";
-        resRegex = _regex;
+        regexTrackValFrom = _regex;
         try {
-            Pattern_resRegex = ParmGenUtil.Pattern_compile(resRegex);
+            pattern_regexTrackValFrom = ParmGenUtil.Pattern_compile(regexTrackValFrom);
         } catch (Exception e) {
-            LOGGER4J.error("ERROR: setresRegex ", e);
-            Pattern_resRegex = null;
+            LOGGER4J.error("ERROR: setResRegex ", e);
+            pattern_regexTrackValFrom = null;
         }
     }
 
@@ -595,13 +603,15 @@ public class AppValue {
         this.replaceZeroSize = b;
     }
 
-    private void setResPartType(String respart) {
-        if (respart == null) respart = "";
-        resPartType = parseValPartType(respart);
+    public void setHttpSectionTypeTrackFrom(HttpSectionTypes httpSectionType) {
+        httpSectionTypeTrackFrom = httpSectionType;
     }
 
-    public void setResPartTypeExported(String respart) {
-        setResPartType(respart);
+    public void setHttpSectionTypeTrackFromExported(String httpSectionTypeString) {
+        if (HttpSectionTypes.isExist(httpSectionTypeString)) {
+            setHttpSectionTypeTrackFrom(HttpSectionTypes.parseString((httpSectionTypeString)));
+        }
+        setHttpSectionTypeTrackFrom(HttpSectionTypes.Default);
     }
 
     /**
@@ -609,17 +619,17 @@ public class AppValue {
      *
      * @return
      */
-    public int getResRegexPos() {
-        return this.resRegexPos;
+    public int getPositionTrackFrom() {
+        return this.positionTrackFrom;
     }
 
     /**
      * Set resRegexPos value
      *
-     * @param resRegexPos
+     * @param positionTrackFrom
      */
-    public void setResRegexPos(int resRegexPos) {
-        this.resRegexPos = resRegexPos;
+    public void setPositionTrackFrom(int positionTrackFrom) {
+        this.positionTrackFrom = positionTrackFrom;
     }
 
     /**
@@ -627,44 +637,34 @@ public class AppValue {
      *
      * @param _resregexpos
      */
-    private void setResRegexPosFromString(String _resregexpos) {
-        this.resRegexPos = Integer.parseInt(_resregexpos);
+    private void setPositionTrackFromString(String _resregexpos) {
+        this.positionTrackFrom = Integer.parseInt(_resregexpos);
     }
 
-    private int getTypeInt() {
-        return valparttype & C_VTYPE;
-    }
-
-    public int getTypeIntExported() {
-        return getTypeInt();
-    }
-
-    public void setTypeInt(int t) {
-        valparttype = t;
-    }
-
-    public int getResTypeInt() {
-        return resPartType & C_VTYPE;
+    public HttpSectionTypes getHttpSectionTypeTrackFrom() {
+        return httpSectionTypeTrackFrom;
     }
 
     public String getAppValueDsp(int _typeval) {
         String avrec =
                 QUOTE(
-                                getValPart()
+                                getHttpSectionTypeEmbedTo().toString()
                                         + (isEnabled() ? "" : "+")
                                         + (isNoCount() ? "" : "+")
                                         + (_typeval == AppParmsIni.T_CSV
                                                 ? ":" + Integer.toString(csvpos)
                                                 : ""))
                         + ","
-                        + QUOTE(value)
-                        + QUOTE_PREFCOMMA(resURL)
-                        + QUOTE_PREFCOMMA(resRegex)
-                        + QUOTE_PREFCOMMA(getResValPart())
-                        + (resRegexPos != -1 ? QUOTE_PREFCOMMA(Integer.toString(resRegexPos)) : "")
-                        + QUOTE_PREFCOMMA(token)
+                        + QUOTE(regexEmbedTo)
+                        + QUOTE_PREFCOMMA(regexTrackURLFrom)
+                        + QUOTE_PREFCOMMA(regexTrackValFrom)
+                        + QUOTE_PREFCOMMA(httpSectionTypeTrackFrom.toString())
+                        + (positionTrackFrom != -1
+                                ? QUOTE_PREFCOMMA(Integer.toString(positionTrackFrom))
+                                : "")
+                        + QUOTE_PREFCOMMA(paramNameTrackFrom)
                         + (_typeval == AppParmsIni.T_TRACK
-                                ? QUOTE_PREFCOMMA(urlencode == true ? "true" : "false")
+                                ? QUOTE_PREFCOMMA(urlEncoded == true ? "true" : "false")
                                 : "")
                         + (_typeval == AppParmsIni.T_TRACK
                                 ? QUOTE_PREFCOMMA(Integer.toString(fromStepNo))
@@ -672,86 +672,35 @@ public class AppValue {
                         + (_typeval == AppParmsIni.T_TRACK
                                 ? QUOTE_PREFCOMMA(Integer.toString(toStepNo))
                                 : "")
-                        + QUOTE_PREFCOMMA(tokentype.name());
+                        + QUOTE_PREFCOMMA(tokenTypeTrackFrom.toString());
 
         return avrec;
     }
 
-    String getValPart() {
-        return getValPart(valparttype);
-    }
-
-    public String getValPart(int _valparttype) {
-        int i = _valparttype & C_VTYPE;
-        if (i < C_VTYPE) {
-            if (ctypestr[i] != null) return ctypestr[i];
-        }
-        return "";
+    HttpSectionTypes getHttpSectionTypeEmbedTo() {
+        return this.httpSectionTypeEmbedTo;
     }
 
     public void setTokenTypeName(String tknames) {
-        tokentype = parseTokenTypeName(tknames);
+        tokenTypeTrackFrom = TokenTypeNames.parseString(tknames);
     }
 
-    public static TokenTypeNames parseTokenTypeName(String tkname) {
-        if (tkname != null && !tkname.isEmpty()) {
-            String uppername = tkname.toUpperCase();
-            TokenTypeNames[] tktypearray = TokenTypeNames.values();
-            for (TokenTypeNames tktype : tktypearray) {
-                if (tktype.name().toUpperCase().equals(uppername)) {
-                    return tktype;
-                }
-            }
+    public boolean setHttpSectionTypeEmbedToExported(String httpSectionTypeString) {
+        boolean isExist = HttpSectionTypes.isExist(httpSectionTypeString);
+        HttpSectionTypes type = HttpSectionTypes.Default;
+        if (isExist) {
+            type = HttpSectionTypes.parseString(httpSectionTypeString);
         }
-        return TokenTypeNames.DEFAULT;
+        setHttpSectionTypeEmbedoTo(type);
+        return isExist;
     }
 
-    String getResValPart() {
-        return getValPart(resPartType);
-    }
-
-    public static int parseValPartType(String _valtype) {
-        int _valparttype = 0;
-        String[] ivals = _valtype.split(":");
-        String valtypewithflags = ivals[0];
-        // The following code will filter out non-alphanumeric characters:
-        String _ctypestr = valtypewithflags.replaceAll("[^0-9a-zA-Z]", "");
-        for (int i = 1; ctypestr[i] != null; i++) {
-            if (_ctypestr.equalsIgnoreCase(ctypestr[i])) {
-                _valparttype = i;
-                break;
-            }
-        }
-        return _valparttype;
-    }
-
-    public boolean setValPartExported(String _valtype) {
-        return setValPart(_valtype);
-    }
-
-    private boolean setValPart(String _valtype) {
-        boolean noerror = false;
-        valparttype = parseValPartType(_valtype);
-        //
-        if (_valtype.indexOf("+") != -1) { // increment
-            clearNoCount();
-        } else {
-            setNoCount();
-        }
-        valpart = _valtype;
-        String[] ivals = _valtype.split(":");
-        csvpos = -1;
-        if (ivals.length > 1) {
-            csvpos = Integer.parseInt(ivals[1].trim());
-        }
-        if (getTypeInt() > 0) {
-            noerror = true;
-        }
-        return noerror;
+    private void setHttpSectionTypeEmbedoTo(HttpSectionTypes httpSectionTypeEmbedTo) {
+        this.httpSectionTypeEmbedTo = httpSectionTypeEmbedTo;
     }
 
     private void setNoCount() {
-        valparttype = valparttype | C_NOCOUNT;
+        this.isNoCount = true;
     }
 
     public void setNoCountExported() {
@@ -759,7 +708,7 @@ public class AppValue {
     }
 
     private void clearNoCount() {
-        valparttype = valparttype & ~C_NOCOUNT;
+        this.isNoCount = false;
     }
 
     public void clearNoCountExported() {
@@ -767,34 +716,34 @@ public class AppValue {
     }
 
     public boolean isNoCount() {
-        return ((valparttype & C_NOCOUNT) == C_NOCOUNT ? true : false);
+        return this.isNoCount;
     }
 
     public boolean setURLencodedVal(String _value) {
         boolean noerror = false;
-        valueregex = null;
+        pattern_RegexEmbedTo = null;
         try {
-            value = URLDecoder.decode(_value, JSONFileIANACharsetName);
-            valueregex = ParmGenUtil.Pattern_compile(value);
+            regexEmbedTo = URLDecoder.decode(_value, JSONFileIANACharsetName);
+            pattern_RegexEmbedTo = ParmGenUtil.Pattern_compile(regexEmbedTo);
             noerror = true;
         } catch (UnsupportedEncodingException e) {
             LOGGER4J.error("decode failed value:[" + _value + "]", e);
-            valueregex = null;
+            pattern_RegexEmbedTo = null;
         }
 
         return noerror;
     }
 
-    private void setVal(String _value) {
-        valueregex = null;
-        value = _value;
-        if (value != null) {
-            valueregex = ParmGenUtil.Pattern_compile(value);
+    private void setRegexEmbedValTo(String _value) {
+        pattern_RegexEmbedTo = null;
+        regexEmbedTo = _value;
+        if (regexEmbedTo != null) {
+            pattern_RegexEmbedTo = ParmGenUtil.Pattern_compile(regexEmbedTo);
         }
     }
 
-    String getVal() {
-        return value;
+    String getRegexEmbedValTo() {
+        return regexEmbedTo;
     }
 
     public String[] replacePathContents(
@@ -836,7 +785,8 @@ public class AppValue {
             ParmGenHashMap errorhash,
             int foundCount) {
         if (contents == null) return null;
-        if (valueregex == null) return null;
+        if (pattern_RegexEmbedTo == null) return null;
+
         int currentStepNo = pmt.getStepNo();
         ParmGenTokenKey tk = null;
         if (toStepNo >= 0) {
@@ -844,14 +794,14 @@ public class AppValue {
                 if (currentStepNo != toStepNo) {
                     return null; //
                 }
-                // tokentype is static. tokentype is the type for tracking value source,
+                // tokentype is the type for tracking value source,
                 // it is no relation to toStepNo.
-                // toStepNo is the type for tracking value destination.
-                tk =
-                        new ParmGenTokenKey(
-                                TokenTypeNames.DEFAULT,
-                                token,
-                                currentStepNo); // token: tracking param name, currentStepNo: target
+                // toStepNo is a sequence number in the RequestResponse List
+                // It is the target request number to embed value.
+                new ParmGenTokenKey(
+                        TokenTypeNames.DEFAULT,
+                        paramNameTrackFrom,
+                        currentStepNo); // token: tracking param name, currentStepNo: target
                 // request StepNo
             } else {
                 // ParmVars.plog.debuglog(0, "replaceContents toStepNo==TOSTEPANY " + toStepNo + "
@@ -868,19 +818,18 @@ public class AppValue {
                 "TypeVal:"
                         + Integer.toString(pini.getTypeVal())
                         + " TargetPart:"
-                        + getValPart()
+                        + getHttpSectionTypeEmbedTo()
                         + " TargetRegex:"
-                        + value
+                        + regexEmbedTo
                         + " ResRegex:"
-                        + resRegex
+                        + regexTrackValFrom
                         + " TokenName:"
-                        + token;
+                        + paramNameTrackFrom;
         ParmGenTokenKey errorhash_key = new ParmGenTokenKey(TokenTypeNames.DEFAULT, errKeyName, 0);
-        Matcher m = valueregex.matcher(contents); // embed target match
+        Matcher m = pattern_RegexEmbedTo.matcher(contents); // embed target match
         Matcher m_org = null;
-
         if (org_contents_iso8859 != null) {
-            m_org = valueregex.matcher(org_contents_iso8859);
+            m_org = pattern_RegexEmbedTo.matcher(org_contents_iso8859);
         }
 
         String newcontents = "";
@@ -914,10 +863,8 @@ public class AppValue {
                     }
                 }
             }
-
             if (spt != -1 && ept != -1) {
-                strcnt =
-                        pini.getStrCnt(pmt, this, tk, currentStepNo, toStepNo, valparttype, csvpos);
+                strcnt = pini.getStrCnt(pmt, this, tk, currentStepNo, toStepNo, csvpos);
                 boolean isnull = false;
                 ParmGenTokenValue errorhash_value = null;
                 String org_newval = strcnt;
@@ -932,14 +879,22 @@ public class AppValue {
                             java.text.MessageFormat.format(
                                     bundle.getString("ParmGen.parameter_regex_msg1.text"),
                                     new Object[] {
-                                        pmt.getStepNo(), token, matchval, strcnt, value
+                                        pmt.getStepNo(),
+                                        paramNameTrackFrom,
+                                        matchval,
+                                        strcnt,
+                                        regexEmbedTo
                                     }));
                     //
                     pmt.addComments(
                             java.text.MessageFormat.format(
                                     bundle.getString("ParmGen.parameter_regex_msg2.text"),
                                     new Object[] {
-                                        pmt.getStepNo(), token, matchval, strcnt, value
+                                        pmt.getStepNo(),
+                                        paramNameTrackFrom,
+                                        matchval,
+                                        strcnt,
+                                        regexEmbedTo
                                     }));
                     errorhash_value = new ParmGenTokenValue("", strcnt, true);
                     errorhash.put(errorhash_key, errorhash_value);
@@ -947,11 +902,15 @@ public class AppValue {
                     LOGGER4J.warn(
                             java.text.MessageFormat.format(
                                     bundle.getString("ParmGen.parameter_regex_err1.text"),
-                                    new Object[] {pmt.getStepNo(), token, matchval, value}));
+                                    new Object[] {
+                                        pmt.getStepNo(), paramNameTrackFrom, matchval, regexEmbedTo
+                                    }));
                     pmt.addComments(
                             java.text.MessageFormat.format(
                                     bundle.getString("ParmGen.parameter_regex_err2.text"),
-                                    new Object[] {pmt.getStepNo(), token, matchval, value}));
+                                    new Object[] {
+                                        pmt.getStepNo(), paramNameTrackFrom, matchval, regexEmbedTo
+                                    }));
                     isnull = true;
                     errorhash_value = new ParmGenTokenValue("", strcnt, false);
                     ParmGenTokenValue storederror = errorhash.get(errorhash_key);
@@ -998,23 +957,22 @@ public class AppValue {
      * @return
      */
     public boolean isSameContents(AppValue app) {
-        if (ParmGenUtil.nullableStringEquals(this.valpart, app.valpart)
-                && this.valparttype == app.valparttype
-                && ParmGenUtil.nullableStringEquals(this.value, app.value)
+        if (this.httpSectionTypeEmbedTo == app.httpSectionTypeEmbedTo
+                && ParmGenUtil.nullableStringEquals(this.regexEmbedTo, app.regexEmbedTo)
                 && this.csvpos == app.csvpos
-                && ParmGenUtil.nullableStringEquals(this.resURL, app.resURL)
-                && ParmGenUtil.nullableStringEquals(this.resRegex, app.resRegex)
-                && this.resPartType == app.resPartType
-                && this.resRegexPos == app.resRegexPos
-                && ParmGenUtil.nullableStringEquals(this.token, app.token)
-                && this.tokentype == app.tokentype
-                && this.urlencode == app.urlencode
-                && this.resencodetype == app.resencodetype
+                && ParmGenUtil.nullableStringEquals(this.regexTrackURLFrom, app.regexTrackURLFrom)
+                && ParmGenUtil.nullableStringEquals(this.regexTrackValFrom, app.regexTrackValFrom)
+                && this.httpSectionTypeTrackFrom == app.httpSectionTypeTrackFrom
+                && this.positionTrackFrom == app.positionTrackFrom
+                && ParmGenUtil.nullableStringEquals(this.paramNameTrackFrom, app.paramNameTrackFrom)
+                && this.tokenTypeTrackFrom == app.tokenTypeTrackFrom
+                && this.urlEncoded == app.urlEncoded
                 && this.fromStepNo == app.fromStepNo
                 && this.toStepNo == app.toStepNo
                 && ParmGenUtil.nullableStringEquals(this.condRegex, app.condRegex)
                 && this.condTargetNo == app.condTargetNo
-                && this.condRegexTargetIsRequest == app.condRegexTargetIsRequest) {
+                && this.condRegexTargetIsRequest == app.condRegexTargetIsRequest
+                && this.isNoCount == app.isNoCount) {
             return true;
         }
         return false;

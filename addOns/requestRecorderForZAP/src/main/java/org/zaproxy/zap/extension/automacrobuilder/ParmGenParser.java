@@ -17,6 +17,7 @@ package org.zaproxy.zap.extension.automacrobuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -258,16 +259,16 @@ public class ParmGenParser implements DeepClone {
      *
      * @return
      */
-    public ArrayList<ParmGenToken> getNameValues() {
+    public List<ParmGenToken> getNameValues() {
 
         HashMap<String, Integer> namepos = new HashMap<String, Integer>();
-        ArrayList<ParmGenToken> lst = new ArrayList<ParmGenToken>();
+        List<ParmGenToken> lst = new ArrayList<ParmGenToken>();
 
         try {
 
             for (Element vtag : elems) {
 
-                ArrayList<ParmGenToken> tklist = getParmGenTokens(vtag, namepos);
+                List<ParmGenToken> tklist = getParmGenTokens(vtag, namepos);
                 lst.addAll(tklist);
             }
 

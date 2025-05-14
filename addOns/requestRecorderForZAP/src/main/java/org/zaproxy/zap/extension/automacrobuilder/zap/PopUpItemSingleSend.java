@@ -97,7 +97,7 @@ public class PopUpItemSingleSend extends JMenuItem {
                                     // so contents being edited in messageRequest
                                     // may be discarded.
                                     f_mbui.updateCurrentSelectedRequestListDisplayContentsSpecific(
-                                            true, false, false);
+                                            false, false, false);
                                     f_mbui.showMessageViewOnWorkBench(1);
                                 }
                             });

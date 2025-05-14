@@ -21,12 +21,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ParmGenGSONDecoder implements GsonParserListener, DeepClone {
 
-    private static org.apache.logging.log4j.Logger logger4j =
+    private static org.apache.logging.log4j.Logger LOGGER4J =
             org.apache.logging.log4j.LogManager.getLogger();
     Gson gson = null;
     JsonElement element = null;
@@ -190,7 +188,7 @@ public class ParmGenGSONDecoder implements GsonParserListener, DeepClone {
 
             return nobj;
         } catch (CloneNotSupportedException ex) {
-            Logger.getLogger(ParmGenGSONDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER4J.error(ex.getMessage(), ex);
         }
 
         return null;

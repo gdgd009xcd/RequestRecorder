@@ -25,8 +25,7 @@ import org.parosproxy.paros.core.scanner.ScannerHook;
 import org.parosproxy.paros.extension.Extension;
 import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.network.HttpRequestHeader;
-import org.zaproxy.zap.extension.automacrobuilder.CastUtils;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenMacroTraceParams;
+import org.zaproxy.zap.extension.automacrobuilder.*;
 import org.zaproxy.zap.extension.automacrobuilder.generated.MacroBuilderUI;
 import org.zaproxy.zap.network.HttpRequestConfig;
 import org.zaproxy.zap.network.HttpRequestConfig.Builder;
@@ -73,7 +72,7 @@ public class MyFirstScannerHook implements ScannerHook {
             hpros.getHttpSender().setMaxRedirects(0);
             hpros.getHttpSender().setFollowRedirect(false);
             // forceUser set to null for disabling authentication
-            hpros.getHttpSender().setUser(null);
+            // hpros.getHttpSender().setUser(null);
 
             this.startedcon
                     .addTheadid(); // Add the thread ID that belongs to Start ActiveScan for telling
@@ -115,6 +114,12 @@ public class MyFirstScannerHook implements ScannerHook {
         MacroBuilderUI mbui = this.startedcon.getMacroBuilderUI();
         if (mbui != null) {
             mbui.setMessageRequestEditMode(false);
+        }
+        if (EnvironmentVariables.isModified()) {
+            // if you have been saved params and modified it then overwrite.
+            ParmGenMacroTraceProvider pmtProvider = this.startedcon.getPmtProvider();
+            ParmGenGSONSaveV2 gson = new ParmGenGSONSaveV2(pmtProvider);
+            gson.GSONsave(null);
         }
     }
 

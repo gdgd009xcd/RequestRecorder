@@ -23,7 +23,7 @@ import org.zaproxy.zap.extension.automacrobuilder.*;
  * @author gdgd009xcd
  */
 @SuppressWarnings("serial")
-public class ParmGenAddParms extends javax.swing.JDialog implements interfaceParmGenWin {
+public class ParmGenAddParms extends javax.swing.JDialog implements InterfaceParmGenWin {
 
     private static org.apache.logging.log4j.Logger LOGGER4J = org.apache.logging.log4j.LogManager.getLogger();
     ParmGenNew parentwin;// parenrt window which create this dialog.
@@ -45,6 +45,33 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
     private static  DefaultComboBoxModel<String> comboModel = null;
     private int[] ListSelectionModel;
 
+    public enum OptTypes {
+        Json,
+        Cookie,
+        FormData,
+        Default;
+
+        public static OptTypes parseString(String httpSectionTypeString) {
+            if (httpSectionTypeString != null && !httpSectionTypeString.isEmpty()) {
+                OptTypes[] tktypearray = OptTypes.values();
+                for (OptTypes tktype : tktypearray) {
+                    if (tktype.name().equalsIgnoreCase(httpSectionTypeString)) {
+                        return tktype;
+                    }
+                }
+            }
+            return OptTypes.Default;
+        }
+
+        @Override
+        public String toString() {
+            String val = super.toString();
+            if (this == Default) {
+                val = "";
+            }
+            return val;
+        }
+    }
 
     /**
      * new instance method<br>
@@ -117,14 +144,17 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
     public void update(){
         ReqParsedTableModel = (DefaultTableModel)ReqParsedTable.getModel();
         Select_ReplaceTargetURL.removeAllItems();
-        PRequestResponse selected_message = ParmGenGSONSaveV2.selected_messages.get(0);
+        PRequestResponse selected_message = getSelectedMessagesInstance().getChoosedMessage();
         // get PrimeHeader within request.
         this.primeHeaderOfRequest = selected_message.request.getPrimeHeaderWithoutCRLF();
         int mpos = selected_message.getMacroPos();
         if(mpos<0){
             mpos = EnvironmentVariables.TOSTEPANY;
         }
-        EnvironmentVariables.session.put(ParmGenSession.K_TOPOS, Integer.toString(mpos));
+        EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                TemporaryValueStorage.Keys.K_TOPOS,
+                TemporaryValueStorage.Keys.Class_K_TOPOS,
+                Integer.toString(mpos));
         selected_request = selected_message.request;
         String newtargetURL = ".*" + selected_request.getURIWithoutQueryPart() + ".*";
         Select_ReplaceTargetURL.addItem(newtargetURL);
@@ -141,12 +171,12 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
 
         // entire URL
         String wholepath = selected_request.getURL();
-        ReqParsedTableModel.addRow(new Object[]{ap.getValPart(AppValue.V_PATH), Integer.toString(0), wholepath});
+        ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Path, OptTypes.Default, Integer.toString(0), wholepath});
 
         Iterator<String> pit = selected_request.pathparams.iterator();
         int ppos = 1;
         while(pit.hasNext()){
-            ReqParsedTableModel.addRow(new Object[]{ap.getValPart(AppValue.V_PATH), Integer.toString(ppos), pit.next()});
+            ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Path, OptTypes.Default, Integer.toString(ppos), pit.next()});
             ppos++;
         }
 
@@ -155,17 +185,17 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
         while(it.hasNext()){
             rcnt++;
             String[] nv = it.next();
-            ReqParsedTableModel.addRow(new Object[]{"query", nv[0], nv[1]});
+            ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Query, OptTypes.Default, nv[0], nv[1]});
         }
-        Iterator<String[]> itb = selected_request.getBodyParams().iterator();
+        Iterator<String[]> itb = selected_request.getBodyParamsFromRequest().iterator();
 
         while(itb.hasNext()){
             rcnt++;
             String[] nv = itb.next();
             if(selected_request.isFormData()){
-                ReqParsedTableModel.addRow(new Object[]{"formdata", nv[0], nv[1]});
-            }else{
-                ReqParsedTableModel.addRow(new Object[]{"body", nv[0], nv[1]});
+                ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Body, OptTypes.FormData, nv[0], nv[1]});
+            } else {
+                ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Body, OptTypes.Default, nv[0], nv[1]});
             }
         }
         
@@ -176,18 +206,18 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
             rcnt++;
             String name = tk.getTokenKey().getName();
             String value = tk.getTokenValue().getValue();
-            ReqParsedTableModel.addRow(new Object[]{"json", name, value});
+            ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Body, OptTypes.Json, name, value});
         }
         
         if (rcnt<=0){
-            ReqParsedTableModel.addRow(new Object[]{"body", "null", "null"});
+            ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Body, OptTypes.Default, "null", "null"});
         }
 
         // List cookies
         Iterator<String[]> cit = selected_request.cookieparams.iterator();
         while(cit.hasNext()){
             String[] nv = cit.next();
-            ReqParsedTableModel.addRow(new Object[]{"cookie", nv[0], nv[1]});
+            ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Header, OptTypes.Cookie, nv[0], nv[1]});
         }
 
         // List headers
@@ -197,7 +227,7 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
             String[] nv = hit.next();
             if(nv.length>1){
                 if(!nv[0].matches("[Cc]ookie")){
-                    ReqParsedTableModel.addRow(new Object[]{"header", nv[0], nv[1]});
+                    ReqParsedTableModel.addRow(new Object[]{AppValue.HttpSectionTypes.Header, OptTypes.Default, nv[0], nv[1]});
                 }
             }
 
@@ -216,19 +246,24 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
         ArrayList<String> names = new ArrayList<>();
 
         for(j=0; j<1000; j++){
-            String n = EnvironmentVariables.session.get(j, ParmGenSession.K_TOKEN);
+            String n = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                    j,
+                    TemporaryValueStorage.Keys.K_TOKEN,
+                    TemporaryValueStorage.Keys.Class_K_TOKEN);
             if(n==null)break;
             names.add(n);
         }
 
-        String targetparam = EnvironmentVariables.session.get(ParmGenSession.K_TARGETPARAM);
+        String targetparam = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                TemporaryValueStorage.Keys.K_TARGETPARAM,
+                TemporaryValueStorage.Keys.Class_K_TARGETPARAM);
 
         int rmax = ReqParsedTableModel.getRowCount();
         ListSelectionModel lmodel = ReqParsedTable.getSelectionModel();
         Encode selectedRequestEncode = selected_request.getPageEnc();
         for(j=0; j<rmax;j++){
-            String targetptype = (String)ReqParsedTableModel.getValueAt(j, 0);//type
-            String name = (String)ReqParsedTableModel.getValueAt(j, 1);//name
+            AppValue.HttpSectionTypes httpSectionTypesEmbedTo = (AppValue.HttpSectionTypes)ReqParsedTableModel.getValueAt(j, 0); // HttpSectionType of target
+            String name = (String)ReqParsedTableModel.getValueAt(j, 2);//name
             String namedecoded = name;
             try {
                 namedecoded = URLDecoder.decode(name, selectedRequestEncode.getIANACharsetName());
@@ -240,164 +275,23 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
             }
         }
     }
+
+    @Override
+    public SelectedMessages getSelectedMessagesInstance() {
+        return this.parentwin.getSelectedMessagesInstance();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
     @SuppressWarnings({"unchecked","rawtypes","serial"})
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        jLabel5 = new javax.swing.JLabel();
-        jScrollPane8 = new javax.swing.JScrollPane();
-        ReqParsedTable = new javax.swing.JTable();
-        Add = new javax.swing.JButton();
-        Cancel = new javax.swing.JButton();
-        Select_ReplaceTargetURL = new javax.swing.JComboBox<>();
-        jLabel1 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
-        ValReplacePart = new javax.swing.JComboBox<>();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle(bundle.getString("ParmGenAddParms.DialogTitle.text")); // NOI18N
-
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jLabel5.setText(bundle.getString("ParmGenAddParms.jLabel5.text")); // NOI18N
-        jLabel5.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-
-        ReqParsedTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"path", "", "/input.php"},
-                {"query", "search", "aiueo"},
-                {"body", "name", "chikara"},
-                {"body", "password", "secret"},
-                {"body", "", null},
-                {"body", null, null}
-            },
-            new String [] {
-                "位置", "parameter", "value"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        ReqParsedTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
-        ReqParsedTable.getTableHeader().setReorderingAllowed(false);
-        jScrollPane8.setViewportView(ReqParsedTable);
-        if (ReqParsedTable.getColumnModel().getColumnCount() > 0) {
-            ReqParsedTable.getColumnModel().getColumn(0).setHeaderValue(bundle.getString("ParmGenAddParms.position.text")); // NOI18N
-        }
-
-        Add.setText(bundle.getString("ParmGenAddParms.AddBtn.text")); // NOI18N
-        Add.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                AddActionPerformed(evt);
-            }
-        });
-
-        Cancel.setText(bundle.getString("ParmGenAddParms.CancelBtn.text")); // NOI18N
-        Cancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                CancelActionPerformed(evt);
-            }
-        });
-
-        Select_ReplaceTargetURL.setEditable(true);
-        Select_ReplaceTargetURL.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        Select_ReplaceTargetURL.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Select_ReplaceTargetURLActionPerformed(evt);
-            }
-        });
-
-        jLabel1.setText(bundle.getString("ParmGenAddParms.HowToRestoreTargetPathRegexInfoTitleLabel1.text")); // NOI18N
-
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ParmGenAddParms.jPanel1.border.text"))); // NOI18N
-
-        ValReplacePart.setModel(comboModel);
-        ValReplacePart.setToolTipText(bundle.getString("ParmGenAddParms.numbertooltip.text")); // NOI18N
-        ValReplacePart.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ValReplacePartActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(ValReplacePart, 0, 140, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(ValReplacePart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 10, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(Select_ReplaceTargetURL, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(Add)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(Cancel))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 247, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(12, 12, 12))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 474, Short.MAX_VALUE)
-                        .addContainerGap())))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(Select_ReplaceTargetURL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel5)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Add)
-                    .addComponent(Cancel))
-                .addContainerGap())
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
 
     private void CancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelActionPerformed
         // TODO add your handling code here:
         dispose();
     }//GEN-LAST:event_CancelActionPerformed
-
-
-    
 
     private String getValueRegex(String v, boolean ispath, boolean iscookie, boolean isheader, boolean isjson, boolean iswholepath){
         replaceEntireValue = false;
@@ -423,17 +317,17 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
         switch(selidx){
             case VT_NUMCOUNTER:
                 fixed = false;// any number length
-                regpattern = "\\d";// regex type of value is only numbers.
+                regpattern = "\\-?\\d";// regex type of value is only numbers.
                 prepostpattern = "([^0-9]*)";
                 break;
             case VT_NUMBERFIXED:
                 fixed = true;// fixed number length
-                regpattern = "\\d";
+                regpattern = "\\-?\\d";
                 prepostpattern = "([^0-9]*)";
                 break;
             case VT_NUMBER:
                 fixed = false;
-                regpattern = "\\d";
+                regpattern = "\\-?\\d";
                 prepostpattern = "([^0-9]*)";
                 break;
             case VT_ALPHANUMFIXED:
@@ -563,12 +457,16 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
         // TODO add your handling code here:
         int[] rowsSelected = ReqParsedTable.getSelectedRows();
         String url = (String)Select_ReplaceTargetURL.getSelectedItem();
-        String fromstr = EnvironmentVariables.session.get(ParmGenSession.K_FROMPOS);
+        String fromstr = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                TemporaryValueStorage.Keys.K_FROMPOS,
+                TemporaryValueStorage.Keys.Class_K_FROMPOS);
         int frompos = -1;
         if(fromstr!=null){
             frompos = Integer.parseInt(fromstr);
         }
-        String tostr = EnvironmentVariables.session.get(ParmGenSession.K_TOPOS);
+        String tostr = EnvironmentVariables.getTemporaryValueStorageInstance().get(
+                TemporaryValueStorage.Keys.K_TOPOS,
+                TemporaryValueStorage.Keys.Class_K_TOPOS);
         int topos = EnvironmentVariables.TOSTEPANY;
         if(tostr!=null){
             topos = Integer.parseInt(tostr);
@@ -582,9 +480,10 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
         
 
         for (int k=0; k<rowsSelected.length; k++){
-            String reqplace = (String)ReqParsedTableModel.getValueAt(rowsSelected[k], 0);//Position
-            String pname = (String)ReqParsedTableModel.getValueAt(rowsSelected[k], 1);//parameter
-            String pvalue = (String)ReqParsedTableModel.getValueAt(rowsSelected[k], 2);//value
+            AppValue.HttpSectionTypes httpSectionTypesEmbedTo = (AppValue.HttpSectionTypes)ReqParsedTableModel.getValueAt(rowsSelected[k], 0);// HttpSectionType of embeding target
+            OptTypes optTypes = (OptTypes)ReqParsedTableModel.getValueAt(rowsSelected[k], 1);
+            String pname = (String)ReqParsedTableModel.getValueAt(rowsSelected[k], 2);//parameter
+            String pvalue = (String)ReqParsedTableModel.getValueAt(rowsSelected[k], 3);//value
             boolean islastparam = false;
             if(k+1==rowsSelected.length){
                 islastparam = true;
@@ -599,9 +498,9 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
                 String cookiepref = "";
                 String pathpref = "";
                 String headerpref ="";
-                if(reqplace.equals("path")){
+                if (httpSectionTypesEmbedTo == AppValue.HttpSectionTypes.Path) {
                     int pn = Integer.parseInt(pname);
-                    if(pn==0) {
+                    if (pn==0) {
                         iswholepath = true;// this choice is nonsense. but later Users could change the value for their own purposes(replace entire URL to pvalue.)
                     } else {
                         pathpref = "(?:[a-z]+\\://[^\\r\\n\\t /]+/|/)";// URL of request through proxy or direct
@@ -611,21 +510,20 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
                     }
                     ispath = true;
                     pname = null;
-                }else if(reqplace.equals("header")){
-                    headerpref = pname + ":[    ]*";
-                    pname = null;
-                    isheader = true;
-                }else if(reqplace.equals("cookie")){
-                    reqplace = "header";
+                } else if(optTypes == OptTypes.Json) {
+                    isjson = true;
+                } else if(optTypes == OptTypes.Cookie) {
                     cookiepref = "[Cc]ookie:.*?" + pname + "=";
                     pname = null;
                     iscookie = true;
-                }else if(reqplace.equals("json")){
-                    isjson = true;
+                } else if(httpSectionTypesEmbedTo == AppValue.HttpSectionTypes.Header) {
+                    headerpref = pname + ":[    ]*";
+                    pname = null;
+                    isheader = true;
                 }
 
                 
-                parentwin.addParamToSelectedModel(reqplace, pname, k, headerpref + cookiepref + pathpref + getValueRegex(pvalue, ispath, iscookie, isheader,isjson, iswholepath), isformdata, islastparam);
+                parentwin.addParamToSelectedModel(httpSectionTypesEmbedTo, optTypes ,pname, k, headerpref + cookiepref + pathpref + getValueRegex(pvalue, ispath, iscookie, isheader,isjson, iswholepath), isformdata, islastparam);
 
             }
         }
@@ -683,21 +581,22 @@ public class ParmGenAddParms extends javax.swing.JDialog implements interfacePar
 
         ReqParsedTable.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {
-                        {"path", "", "/input.php"},
-                        {"query", "search", "aiueo"},
-                        {"body", "name", "chikara"},
-                        {"body", "password", "secret"},
-                        {"body", "", null},
-                        {"body", null, null}
+                        {"path", OptTypes.Default, "", "/input.php"},
+                        {"query", OptTypes.Default, "search", "aiueo"},
+                        {"body", OptTypes.Default, "name", "chikara"},
+                        {"body", OptTypes.Default, "password", "secret"},
+                        {"body", OptTypes.Default, "", null},
+                        {"body", OptTypes.Default, null, null}
                 },
                 new String [] {
-                        "位置", "parameter", "value"
+                        "position", "Type","Parameter", "Value"
                 }
         ) {
             Class[] types = new Class [] {
-                    java.lang.String.class, java.lang.String.class, java.lang.String.class
+                    AppValue.HttpSectionTypes.class, OptTypes.class, java.lang.String.class, java.lang.String.class
             };
 
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }

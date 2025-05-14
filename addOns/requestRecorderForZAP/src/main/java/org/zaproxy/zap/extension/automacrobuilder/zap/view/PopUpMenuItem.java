@@ -112,7 +112,6 @@ public class PopUpMenuItem extends PopupMenuItemHttpMessageContainer {
             if (pmtParmsArray != null && pmtParmsArray.length > 0 && this.acon.hasCustomActiveScanPmtParamsByScanner(pmtParmsArray[0])) {
                 int index = 0;
                 for (Integer i : pmtParmsArray) {
-                    LOGGER4J.info("no" + index + "i=" + i);
                     index++;
                 }
 

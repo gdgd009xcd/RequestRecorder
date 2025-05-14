@@ -10,9 +10,8 @@ import java.util.ResourceBundle;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import org.zaproxy.zap.extension.automacrobuilder.FileReadLine;
-import org.zaproxy.zap.extension.automacrobuilder.ParmGenSession;
+import org.zaproxy.zap.extension.automacrobuilder.TemporaryValueStorage;
 import org.zaproxy.zap.extension.automacrobuilder.EnvironmentVariables;
-import org.zaproxy.zap.extension.automacrobuilder.interfaceParmGenWin;
 
 /**
  *
@@ -24,7 +23,7 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
     String csvfile;
     FileReadLine frn;
     DefaultTableModel model;
-    interfaceParmGenWin parentwin;
+    InterfaceParmGenWin parentwin;
 
     /**
      * new instance method<br>
@@ -34,7 +33,7 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
      * @param _csvfile
      * @return this
      */
-    public static ParmGenCSVLoader newInstance(interfaceParmGenWin _parent, String _csvfile) {
+    public static ParmGenCSVLoader newInstance(InterfaceParmGenWin _parent, String _csvfile) {
         return new ParmGenCSVLoader(_parent, _csvfile).buildThis(_parent, _csvfile);
     }
 
@@ -45,7 +44,7 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
      * @param _parent
      * @param _csvfile
      */
-    protected ParmGenCSVLoader(interfaceParmGenWin _parent, String _csvfile) {
+    protected ParmGenCSVLoader(InterfaceParmGenWin _parent, String _csvfile) {
         super();
     }
 
@@ -58,17 +57,17 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
      * @param _csvfile
      * @return this
      */
-    protected final ParmGenCSVLoader buildThis(interfaceParmGenWin _parent, String _csvfile) {
+    protected final ParmGenCSVLoader buildThis(InterfaceParmGenWin _parent, String _csvfile) {
         parentwin = _parent;
         initComponents();
         model = (DefaultTableModel)ColumnTable.getModel();
         csvfile = _csvfile;
-        frn= new FileReadLine(csvfile, false);
+        frn= new FileReadLine(null, csvfile);
         return this;
     }
 
     public boolean  readOneLine(){
-        ArrayList<String> columns = frn.readColumns();
+        ArrayList<String> columns = frn.readOneRecordWithColumns();
         if(columns==null){
             JOptionPane.showMessageDialog(this, bundle.getString("ParmGenCSVLoader.CSVLoadErrorOptionPaneMessage.text"), bundle.getString("ParmGenCSVLoader.CSVLoadErrorOptionPaneTitle.text"), JOptionPane.ERROR_MESSAGE);
             return false;
@@ -123,7 +122,7 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
 
             },
             new String [] {
-                "カラム位置", "値"
+                "position", "value"
             }
         ) {
             Class[] types = new Class [] {
@@ -199,8 +198,12 @@ public class ParmGenCSVLoader extends javax.swing.JFrame {
         dispose();
         if(rowsSelected.length> 0){
             for (int i = 0;i < rowsSelected.length;i++ ){
-                int colpos = (int)model.getValueAt(rowsSelected[i], 0);//カラム一
-                EnvironmentVariables.session.put(i, ParmGenSession.K_COLUMN, Integer.toString(colpos));
+                int colpos = (int)model.getValueAt(rowsSelected[i], 0);
+                EnvironmentVariables.getTemporaryValueStorageInstance().put(
+                        i,
+                        TemporaryValueStorage.Keys.K_COLUMN,
+                        TemporaryValueStorage.Keys.Class_K_COLUMN,
+                        Integer.toString(colpos));
             }
             dispose();
             ParmGenAddParms.newInstance((ParmGenNew)parentwin, true).setVisible(true);
